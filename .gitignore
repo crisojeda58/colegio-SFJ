@@ -3,7 +3,7 @@ gitignore
 node_modules
 
 # build artifacts
-.next
+/.next/
 out
 
 # log files
