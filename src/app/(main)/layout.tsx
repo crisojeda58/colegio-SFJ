@@ -47,7 +47,6 @@ import { AuthProvider, useAuth } from "@/context/AuthContext";
 
 const menuItems = [
     { href: "/noticias", label: "Noticias y Eventos", icon: Newspaper },
-    { href: "/foros", label: "Foros", icon: MessagesSquare },
     { href: "/documentos", label: "Documentos", icon: FolderKanban },
     { href: "/sitios_interes", label: "Sitios de Interés", icon: Link2 },
     { href: "/directorio", label: "Directorio", icon: Users },
