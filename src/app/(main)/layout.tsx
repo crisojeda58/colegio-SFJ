@@ -49,6 +49,7 @@ const menuItems = [
     { href: "/noticias", label: "Noticias y Eventos", icon: Newspaper },
     { href: "/documentos", label: "Documentos", icon: FolderKanban },
     { href: "/sitios_interes", label: "Sitios de Interés", icon: Link2 },
+    { href: "/colegas_nuevos", label: "Colegas Nuevos", icon: Users },
     { href: "/directorio", label: "Directorio", icon: Users },
     { href: "/jefaturas_curso", label: "Jefaturas de curso", icon: Contact },
     { href: "/cumpleanos", label: "Cumpleaños", icon: Cake },

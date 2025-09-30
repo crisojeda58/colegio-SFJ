@@ -169,6 +169,9 @@ export default function NewsAndCalendarPage() {
 
   return (
     <div className="container mx-auto">
+      <div className="bg-primary text-primary-foreground text-center p-4 rounded-lg mb-6">
+          <h2 className="text-6xl font-bold">Bienvenidos a la Intranet de Funcionarios</h2>
+      </div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-card">Portal de Noticias y Eventos</h1>
         {canCreateNews && (
