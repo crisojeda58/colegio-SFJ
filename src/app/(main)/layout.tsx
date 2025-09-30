@@ -12,8 +12,10 @@ import {
   Contact,
   FolderKanban,
   GalleryVerticalEnd,
+  Link2,
   LoaderCircle,
   MessagesSquare,
+  Cake,
   Newspaper,
   School,
   Shield,
@@ -60,18 +62,28 @@ const menuItems = [
     icon: FolderKanban,
   },
   {
+    href: "/sitios_interes",
+    label: "Sitios de Interés",
+    icon: Link2,
+  },
+  {
     href: "/directorio",
     label: "Directorio",
     icon: Users,
   },
   {
-    href: "/jefaturas",
-    label: "Jefaturas",
+    href: "/jefaturas_curso",
+    label: "Jefaturas de curso",
     icon: Contact,
   },
   {
+    href: "/cumpleanos",
+    label: "Cumpleaños",
+    icon: Cake,
+  },
+  {
     href: "/cocina",
-    label: "Menu Semanal",
+    label: "Menu Casino",
     icon: Utensils,
   },
   {
@@ -200,8 +212,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <SidebarTrigger>
                 <span className="sr-only">Toggle Sidebar</span>
               </SidebarTrigger>
-            </div>
-            <div className="flex items-center gap-4">
               <Image
                 src="https://res.cloudinary.com/duys6asgx/image/upload/v1758803545/734c8556-44ed-4aae-a2bb-6a1dca6b9b67.png"
                 alt="Logo"
@@ -209,6 +219,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 height={24}
                 className="object-contain"
               />
+            </div>
+            <div className="flex items-center gap-4">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost">
@@ -241,7 +253,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </header>
           <main 
             className="flex-1 p-4 sm:p-6 lg:p-8 relative bg-cover bg-center"
-            style={{ backgroundImage: "url('https://images.adsttc.com/media/images/5193/a4fa/b3fc/4bd6/7500/0076/slideshow/38709_120920_061D.jpg?1412105883')" }}
+            style={{ backgroundImage: "url('https://res.cloudinary.com/duys6asgx/image/upload/v1759150362/38709_120920_061D_f5holn.jpg" }}
           >
             <div className="absolute inset-0 bg-black/50" />
             <div className="relative">
