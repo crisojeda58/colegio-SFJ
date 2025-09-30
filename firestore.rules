@@ -32,17 +32,11 @@ service cloud.firestore {
         // La lógica de roles más específica está en la app.
         allow write: if request.auth != null;
     }
-    
-    // --- Reglas para la colección 'forum_topics' ---
-    match /forum_topics/{topicId} {
-        // Usuarios autenticados pueden leer y escribir en los foros.
-        allow read: if request.auth != null;
-        allow write: if request.auth != null;
-        
-        match /forum_replies/{replyId} {
-            allow read: if request.auth != null;
-            allow write: if request.auth != null;
-        }
+
+    // --- Reglas para la colección 'sites' ---
+    match /sites/{siteId} {
+        // Cualquiera puede leer los sitios de interés.
+        allow read, write: if request.auth != null;
     }
   }
 }
