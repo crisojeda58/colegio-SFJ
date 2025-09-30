@@ -108,7 +108,7 @@ export default function BirthdaysPage() {
               </CardHeader>
               <CardContent className="relative p-0">
                 <Image src="https://res.cloudinary.com/duys6asgx/image/upload/v1759156268/Captura_de_pantalla_2025-09-29_113026_xnxd4w.png" alt="Decoración de cumpleaños" width={400} height={100} className="w-full h-24 object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"/>
+                <div className="absolute inset-0"/>
               </CardContent>
             </Card>
           ))}
