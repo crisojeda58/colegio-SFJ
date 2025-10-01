@@ -12,12 +12,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface UserProfile {
   name: string;
   email: string;
   role: string;
   department: string;
+  avatarUrl?: string;
 }
 
 export default function ProfilePage() {
@@ -107,7 +109,8 @@ export default function ProfilePage() {
              <h1 className="text-3xl font-bold mb-6 text-card">Perfil de Usuario</h1>
              <Card>
                 <CardHeader className="flex flex-col md:flex-row items-start gap-6 space-y-0">
-                    <div className="flex-1 space-y-2">
+                    <Skeleton className="h-24 w-24 rounded-full" />
+                    <div className="flex-1 space-y-2 pt-2">
                         <Skeleton className="h-10 w-3/4" />
                         <Skeleton className="h-6 w-1/4" />
                         <Skeleton className="h-5 w-1/3" />
@@ -131,7 +134,11 @@ export default function ProfilePage() {
       <h1 className="text-3xl font-bold mb-6 text-card">Perfil de Usuario</h1>
       <Card>
         <CardHeader className="flex flex-col md:flex-row items-start gap-6 space-y-0">
-          <div className="flex-1">
+            <Avatar className="h-24 w-24">
+                <AvatarImage src={userProfile.avatarUrl} />
+                <AvatarFallback>{userProfile.name.charAt(0)}</AvatarFallback>
+            </Avatar>
+          <div className="flex-1 pt-2">
             <CardTitle className="text-4xl">{userProfile.name}</CardTitle>
             <CardDescription className="text-lg">{userProfile.role}</CardDescription>
             <div className="flex items-center gap-4 mt-2 text-muted-foreground">

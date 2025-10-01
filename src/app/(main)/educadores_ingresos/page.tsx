@@ -68,7 +68,7 @@ export default function ColleaguesPage() {
 
   return (
     <div className="container mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-card">Colegas Nuevos</h1>
+      <h1 className="text-3xl font-bold mb-6 text-card">Nuevos Educadores</h1>
       <p className="text-card mb-6">Colegas que se han unido este año.</p>
       <div className="relative mb-6">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -79,7 +79,7 @@ export default function ColleaguesPage() {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
-      <Card className="bg-sky-50">
+      <Card className="bg-indigo-100">
         <Table>
           <TableHeader>
             <TableRow>

@@ -49,7 +49,7 @@ const menuItems = [
     { href: "/noticias", label: "Noticias y Eventos", icon: Newspaper },
     { href: "/documentos", label: "Documentos", icon: FolderKanban },
     { href: "/sitios_interes", label: "Sitios de Interés", icon: Link2 },
-    { href: "/colegas_nuevos", label: "Colegas Nuevos", icon: Users },
+    { href: "/educadores_ingresos", label: "Educadores Ingresos", icon: Users },
     { href: "/directorio", label: "Directorio", icon: Users },
     { href: "/jefaturas_curso", label: "Jefaturas de curso", icon: Contact },
     { href: "/cumpleanos", label: "Cumpleaños", icon: Cake },
@@ -100,8 +100,8 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
       <Sidebar>
         <SidebarHeader className="p-4">
             <Link href="/noticias" className="flex items-center gap-2 text-primary-foreground group-data-[collapsible=icon]:justify-center">
-                <div className="p-1.5 bg-primary-foreground/20 rounded-lg">
-                <School className="w-6 h-6 text-primary-foreground" />
+                <div className="p-1">
+                <Image src="https://res.cloudinary.com/duys6asgx/image/upload/v1759331112/Logo_insignia_a_color_smffkw.png" alt="Logo en sidebar" width={35} height={24} className="object-contain"/>
                 </div>
                 <div className="text-lg font-bold tracking-tight group-data-[collapsible=icon]:hidden">
                 Colegio San Francisco Javier
@@ -135,7 +135,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                 <SidebarTrigger>
                     <span className="sr-only">Toggle Sidebar</span>
                 </SidebarTrigger>
-                <Image src="https://res.cloudinary.com/duys6asgx/image/upload/v1758803545/734c8556-44ed-4aae-a2bb-6a1dca6b9b67.png" alt="Logo" width={120} height={24} className="object-contain" />
+                <Image src="https://res.cloudinary.com/duys6asgx/image/upload/v1759331112/Logo_horizontal_a_color_wqnxlw.png" alt="Logo" width={120} height={24} className="object-contain" />
                 </div>
                 <div className="flex items-center gap-4">
                 <DropdownMenu>
@@ -168,7 +168,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                 <div className="container mx-auto flex items-center justify-center gap-4 text-sm text-muted-foreground">
                 <span>© {new Date().getFullYear()} Colegio San Francisco Javier</span>
                 <span>|</span>
-                <Image src="https://res.cloudinary.com/duys6asgx/image/upload/v1758803545/734c8556-44ed-4aae-a2bb-6a1dca6b9b67.png" alt="Logo en footer" width={120} height={24} className="object-contain"/>
+                <Image src="https://res.cloudinary.com/duys6asgx/image/upload/v1759331112/Logo_insignia_a_color_smffkw.png" alt="Logo en footer" width={35} height={24} className="object-contain"/>
                 </div>
             </footer>
             </div>

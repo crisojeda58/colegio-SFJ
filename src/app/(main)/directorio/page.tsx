@@ -10,6 +10,7 @@ import { Mail, Phone, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Employee {
   id: string;
@@ -17,6 +18,7 @@ interface Employee {
   department: string;
   email: string;
   phone?: string;
+  avatarUrl?: string;
 }
 
 export default function DirectoryPage() {
@@ -88,7 +90,10 @@ export default function DirectoryPage() {
               Array.from({ length: 5 }).map((_, index) => (
                 <TableRow key={index}>
                   <TableCell>
-                     <Skeleton className="h-4 w-32" />
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-9 w-9 rounded-full" />
+                      <Skeleton className="h-4 w-32" />
+                    </div>
                   </TableCell>
                   <TableCell><Skeleton className="h-6 w-28 rounded-full" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-24" /></TableCell>
@@ -103,7 +108,13 @@ export default function DirectoryPage() {
               filteredEmployees.map((employee) => (
                 <TableRow key={employee.id}>
                   <TableCell>
-                    <span className="font-medium">{employee.name}</span>
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage src={employee.avatarUrl || `https://avatar.vercel.sh/${employee.name}.png`} alt={employee.name} />
+                        <AvatarFallback>{employee.name.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <span className="font-medium">{employee.name}</span>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Badge variant="secondary">{employee.department}</Badge>
