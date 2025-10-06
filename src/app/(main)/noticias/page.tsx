@@ -5,7 +5,7 @@ import * as React from "react";
 import Link from "next/link";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, collection, getDocs, query, orderBy, Timestamp } from "firebase/firestore";
-import { format, isPast } from 'date-fns';
+import { format, isPast, isFuture, compareAsc } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 import {
@@ -16,17 +16,20 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Clock, Newspaper } from "lucide-react";
+import { PlusCircle, Clock, Newspaper, LoaderCircle } from "lucide-react";
 import { auth, db } from "@/lib/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+
+const NEWS_PER_PAGE = 6;
 
 interface NewsItem {
     id: string;
     title: string;
     excerpt: string;
     imageUrl: string;
+    category: "Noticia" | "Evento";
     publishedAt?: Date;
     eventDate?: Date;
 }
@@ -46,6 +49,7 @@ export default function NewsAndCalendarPage() {
   const [newsItems, setNewsItems] = React.useState<NewsItem[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [date, setDate] = React.useState<Date | undefined>(new Date());
+  const [visibleNewsCount, setVisibleNewsCount] = React.useState(NEWS_PER_PAGE);
 
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -66,25 +70,24 @@ export default function NewsAndCalendarPage() {
         setLoading(true);
         try {
             const newsCollection = collection(db, "news_items");
-            const q = query(newsCollection, orderBy("eventDate", "asc"));
+            // Ordenamos por eventDate como base para traer los más recientes primero.
+            const q = query(newsCollection, orderBy("eventDate", "desc"));
             const querySnapshot = await getDocs(q);
 
-            const itemsList = querySnapshot.docs
-                .map(doc => {
-                    const data = doc.data();
-                    // Robust date checking
-                    const publishedAt = data.publishedAt instanceof Timestamp ? data.publishedAt.toDate() : undefined;
-                    const eventDate = data.eventDate instanceof Timestamp ? data.eventDate.toDate() : undefined;
-                    return {
-                        id: doc.id,
-                        title: data.title,
-                        excerpt: data.excerpt,
-                        imageUrl: data.imageUrl,
-                        publishedAt: publishedAt,
-                        eventDate: eventDate,
-                    } as NewsItem;
-                })
-                .filter(item => item.eventDate); // Ensure we only deal with items that are events
+            const itemsList = querySnapshot.docs.map(doc => {
+                const data = doc.data();
+                const publishedAt = data.publishedAt instanceof Timestamp ? data.publishedAt.toDate() : undefined;
+                const eventDate = data.eventDate instanceof Timestamp ? data.eventDate.toDate() : undefined;
+                return {
+                    id: doc.id,
+                    title: data.title,
+                    excerpt: data.excerpt,
+                    imageUrl: data.imageUrl,
+                    category: data.category,
+                    publishedAt: publishedAt,
+                    eventDate: eventDate,
+                } as NewsItem;
+            });
             
             setNewsItems(itemsList);
         } catch (error) {
@@ -96,8 +99,23 @@ export default function NewsAndCalendarPage() {
     fetchNews();
   }, []);
 
+  // Lógica de Ordenamiento por eventDate
+  const sortedNewsItems = React.useMemo(() => {
+    // Separa en futuros y pasados basándose únicamente en eventDate
+    const futureItems = newsItems
+      .filter(item => item.eventDate && isFuture(item.eventDate))
+      .sort((a, b) => compareAsc(a.eventDate!, b.eventDate!)); // Futuros: del más cercano al más lejano
+
+    const pastItems = newsItems
+      .filter(item => !item.eventDate || isPast(item.eventDate))
+      .sort((a, b) => b.eventDate!.getTime() - a.eventDate!.getTime()); // Pasados: del más reciente al más antiguo
+
+    return [...futureItems, ...pastItems];
+  }, [newsItems]);
+
+  // Lógica para el calendario (no cambia)
   const events = newsItems
-    .filter(item => item.eventDate)
+    .filter(item => item.category === 'Evento' && item.eventDate)
     .map(item => ({
         id: item.id,
         title: item.title,
@@ -113,11 +131,17 @@ export default function NewsAndCalendarPage() {
 
   const canCreateNews = userProfile?.role === 'Jefe de departamento' || userProfile?.role === 'Admin Intranet';
 
+  const handleLoadMore = () => {
+    setVisibleNewsCount(prevCount => prevCount + NEWS_PER_PAGE);
+  };
+
+  const currentlyVisibleNews = sortedNewsItems.slice(0, visibleNewsCount);
+
   const renderNewsList = (items: NewsItem[]) => {
     if (loading && items.length === 0) {
       return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array.from({ length: 3 }).map((_, index) => (
+          {Array.from({ length: 6 }).map((_, index) => (
             <Card key={index} className="flex flex-col overflow-hidden">
                 <Skeleton className="w-full h-48" />
                 <CardHeader>
@@ -140,6 +164,11 @@ export default function NewsAndCalendarPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {items.map((item) => {
                 const hasEventDatePassed = item.eventDate ? isPast(item.eventDate) : false;
+                // La fecha a mostrar en la tarjeta es siempre eventDate
+                const displayDate = item.eventDate 
+                    ? format(item.eventDate, "dd 'de' MMMM, yyyy - HH:mm 'hrs.'", { locale: es })
+                    : "Fecha no especificada";
+
                 return (
                     <Link href={`/noticias/${item.id}`} key={item.id} className="block transform transition-transform duration-200 hover:scale-[1.02]">
                         <Card className="flex flex-col overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full">
@@ -148,9 +177,9 @@ export default function NewsAndCalendarPage() {
                         </div>
                         <CardHeader>
                             <div className="flex justify-between items-center mb-2">
-                            <span className="text-xs text-primary font-semibold">
-                                {item.eventDate ? format(item.eventDate, "dd 'de' MMMM, yyyy - HH:mm 'hrs.'", { locale: es }) : 'Fecha no especificada'}
-                            </span>
+                                <span className={`text-xs font-semibold ${item.category === 'Evento' ? 'text-primary' : 'text-accent-foreground'}`}>
+                                    {displayDate}
+                                </span>
                             </div>
                             <CardTitle className={cn(hasEventDatePassed && "text-destructive")}>
                                 {item.title}
@@ -178,7 +207,7 @@ export default function NewsAndCalendarPage() {
           <Button asChild>
             <Link href="/noticias/nuevo">
               <PlusCircle className="mr-2" />
-              Crear Noticia
+              Crear Publicación
             </Link>
           </Button>
         )}
@@ -249,7 +278,14 @@ export default function NewsAndCalendarPage() {
       </div>
 
       <div className="mt-6">
-        {renderNewsList(newsItems)}
+        {renderNewsList(currentlyVisibleNews)}
+        {visibleNewsCount < sortedNewsItems.length && (
+            <div className="flex justify-center mt-8">
+                <Button onClick={handleLoadMore} variant="secondary">
+                    Cargar más publicaciones
+                </Button>
+            </div>
+        )}
       </div>
     </div>
   );

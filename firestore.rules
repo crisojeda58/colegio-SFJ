@@ -19,20 +19,20 @@ service cloud.firestore {
       allow read: if true;
       // Solo usuarios autenticados pueden actualizar el menú (roles se validan en la app).
       allow update: if request.auth != null;
-       // Nadie puede crear o borrar menús desde la app.
+      // Nadie puede crear o borrar menús desde la app.
       allow create, delete: if false;
     }
 
     // --- Reglas para la colección 'news_items' ---
     match /news_items/{newsId} {
-        // Cualquiera puede leer las noticias.
-        allow read: if true;
-        // Solo usuarios autenticados pueden escribir (crear/actualizar/borrar).
-        // La lógica de roles más específica está en la app.
-        allow write: if request.auth != null;
+      // Cualquiera puede leer las noticias.
+      allow read: if true;
+      // Solo usuarios autenticados pueden escribir (crear/actualizar/borrar).
+      // La lógica de roles más específica está en la app.
+      allow write: if request.auth != null;
     }
 
-    // Nueva regla para la colección de carpetas de documentos
+    // --- REGLA PARA CARPETAS ---
     match /docs_folders/{folderId} {
       allow read, write: if request.auth != null;
     }

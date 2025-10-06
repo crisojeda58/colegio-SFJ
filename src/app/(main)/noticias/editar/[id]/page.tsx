@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar as CalendarIcon, LoaderCircle, ArrowLeft } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -29,6 +30,7 @@ const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/web
 
 const formSchema = z.object({
   title: z.string().min(10, "El título debe tener al menos 10 caracteres.").max(150),
+  category: z.enum(["Noticia", "Evento"], { required_error: "Debes seleccionar una categoría." }),
   excerpt: z.string().min(20, "El resumen debe tener al menos 20 caracteres.").max(300),
   content: z.string().min(50, "El contenido debe tener al menos 50 caracteres."),
   image: z
@@ -49,6 +51,7 @@ type FormValues = z.infer<typeof formSchema>;
 interface NewsItem {
     authorId: string;
     imageUrl: string;
+    category: "Noticia" | "Evento";
 }
 
 interface UserProfile {
@@ -71,6 +74,7 @@ export default function EditNewsPage() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
+      category: "Noticia",
       excerpt: "",
       content: "",
       eventTime: "12:00",
@@ -102,12 +106,13 @@ export default function EditNewsPage() {
 
       if (docSnap.exists()) {
         const data = docSnap.data();
-        setNewsItem({ authorId: data.authorId, imageUrl: data.imageUrl });
+        setNewsItem({ authorId: data.authorId, imageUrl: data.imageUrl, category: data.category });
         
         const eventDate = data.eventDate ? (data.eventDate as Timestamp).toDate() : new Date();
         
         form.reset({
           title: data.title,
+          category: data.category || "Noticia",
           excerpt: data.excerpt,
           content: data.content,
           eventDate: eventDate,
@@ -150,7 +155,6 @@ export default function EditNewsPage() {
     try {
       let imageUrl = newsItem.imageUrl;
 
-      // Si se sube una nueva imagen, reemplazarla
       if (data.image && data.image.length > 0) {
         const imageFile = data.image[0];
         const formData = new FormData();
@@ -178,6 +182,7 @@ export default function EditNewsPage() {
       const docRef = doc(db, "news_items", newsId);
       await updateDoc(docRef, {
         title: data.title,
+        category: data.category,
         excerpt: data.excerpt,
         content: data.content,
         imageUrl: imageUrl,
@@ -187,7 +192,7 @@ export default function EditNewsPage() {
 
       toast({ title: "¡Éxito!", description: "La noticia ha sido actualizada." });
       router.push(`/noticias/${newsId}`);
-      router.refresh(); // Para asegurar que los datos se muestren actualizados
+      router.refresh();
     } catch (error: any) {
       console.error("Error updating news item: ", error);
       toast({ variant: "destructive", title: "Error", description: error.message || "No se pudo actualizar la noticia." });
@@ -228,19 +233,42 @@ export default function EditNewsPage() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Título</FormLabel>
-                        <FormControl>
-                        <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                      control={form.control}
+                      name="title"
+                      render={({ field }) => (
+                      <FormItem>
+                          <FormLabel>Título</FormLabel>
+                          <FormControl>
+                          <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                      </FormItem>
+                      )}
+                  />
+                  <FormField
+                      control={form.control}
+                      name="category"
+                      render={({ field }) => (
+                      <FormItem>
+                          <FormLabel>Categoría</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                  <SelectTrigger>
+                                  <SelectValue placeholder="Selecciona una categoría" />
+                                  </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                  <SelectItem value="Noticia">Noticia</SelectItem>
+                                  <SelectItem value="Evento">Evento</SelectItem>
+                              </SelectContent>
+                          </Select>
+                          <FormMessage />
+                      </FormItem>
+                      )}
+                  />
+              </div>
                 <FormField
                     control={form.control}
                     name="excerpt"

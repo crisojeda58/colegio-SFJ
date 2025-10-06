@@ -135,7 +135,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                 <SidebarTrigger>
                     <span className="sr-only">Toggle Sidebar</span>
                 </SidebarTrigger>
-                <Image src="https://res.cloudinary.com/duys6asgx/image/upload/v1759331112/Logo_horizontal_a_color_wqnxlw.png" alt="Logo" width={120} height={24} className="object-contain" />
+                <Image src="https://res.cloudinary.com/duys6asgx/image/upload/v1759331112/Logo_horizontal_a_color_wqnxlw.png" alt="Logo Navbar" width={120} height={24} className="object-contain" />
                 </div>
                 <div className="flex items-center gap-4">
                 <DropdownMenu>

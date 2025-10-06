@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar as CalendarIcon, LoaderCircle } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -28,6 +29,7 @@ const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/web
 
 const formSchema = z.object({
   title: z.string().min(10, { message: "El título debe tener al menos 10 caracteres." }).max(150, { message: "El título no puede exceder los 150 caracteres." }),
+  category: z.enum(["Noticia", "Evento"], { required_error: "Debes seleccionar una categoría." }),
   excerpt: z.string().min(20, { message: "El resumen debe tener al menos 20 caracteres." }).max(300, { message: "El resumen no puede exceder los 300 caracteres." }),
   content: z.string().min(50, { message: "El contenido debe tener al menos 50 caracteres." }),
   image: z
@@ -148,7 +150,7 @@ export default function NewNewsPage() {
         content: data.content,
         imageUrl: imageUrl, 
         eventDate: combinedDateTime,
-        category: "Evento",
+        category: data.category, // Usar el valor del formulario
         authorId: user.uid,
         authorName: userProfile.name,
         createdAt: serverTimestamp(),
@@ -160,7 +162,7 @@ export default function NewNewsPage() {
 
       toast({
         title: "¡Éxito!",
-        description: "La noticia ha sido publicada.",
+        description: "La publicación ha sido creada.",
       });
       router.push("/noticias");
 
@@ -194,19 +196,42 @@ export default function NewNewsPage() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Título</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Un titular atractivo e informativo..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Título</FormLabel>
+                        <FormControl>
+                        <Input placeholder="Un titular atractivo e informativo..." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Categoría</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                                <SelectTrigger>
+                                <SelectValue placeholder="Selecciona una categoría" />
+                                </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                <SelectItem value="Noticia">Noticia</SelectItem>
+                                <SelectItem value="Evento">Evento</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+              </div>
                <FormField
                 control={form.control}
                 name="excerpt"
@@ -322,7 +347,7 @@ export default function NewNewsPage() {
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
                   {isSubmitting && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
-                  {isSubmitting ? "Publicando..." : "Publicar Noticia"}
+                  {isSubmitting ? "Publicando..." : "Publicar"}
                 </Button>
               </CardFooter>
             </form>
