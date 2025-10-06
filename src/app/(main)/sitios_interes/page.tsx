@@ -132,7 +132,7 @@ export default function SitiosDeInteresPage() {
           ))}
         </div>
       ) : sites.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {sites.map((site) => {
             const Icon = iconMap[site.icon] || Globe;
             return (
@@ -151,7 +151,6 @@ export default function SitiosDeInteresPage() {
                   )}
                 </CardHeader>
                 <CardContent className="flex-grow flex flex-col justify-between">
-                  <p className="text-muted-foreground mb-4">{site.description}</p>
                   <Button asChild className="w-full mt-auto bg-foreground text-background hover:bg-foreground/80">
                     <a href={site.href} target="_blank" rel="noopener noreferrer">
                       Visitar Sitio
