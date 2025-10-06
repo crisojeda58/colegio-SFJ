@@ -148,8 +148,8 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                     <DropdownMenuContent className="w-56" align="end" forceMount>
                         <DropdownMenuLabel className="font-normal">
                             <div className="flex flex-col space-y-1">
-                            <p className="text-sm font-medium leading-none">{userProfile?.name || 'Usuario'}</p>
-                            <p className="text-xs leading-none text-muted-foreground">{userProfile?.email || 'email@example.com'}</p>
+                              <p className="text-sm font-medium leading-none">{userProfile?.name || 'Usuario'}</p>
+                              <p className="text-xs leading-none text-muted-foreground">{userProfile?.email || 'email@example.com'}</p>
                             </div>
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
@@ -160,18 +160,22 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                 </DropdownMenu>
                 </div>
             </header>
-            <main className="flex-1 p-4 sm:p-6 lg:p-8 relative bg-cover bg-center" style={{ backgroundImage: "url('https://res.cloudinary.com/duys6asgx/image/upload/v1759150362/38709_120920_061D_f5holn.jpg')" }}>
+            
+            {/* Contenedor para main y footer con el fondo */}
+            <div className="flex-1 flex flex-col relative bg-cover bg-center" style={{ backgroundImage: "url('https://res.cloudinary.com/duys6asgx/image/upload/v1759150362/38709_120920_061D_f5holn.jpg')" }}>
                 <div className="absolute inset-0 bg-black/50" />
-                <div className="relative">{children}</div>
-            </main>
-            <footer className="p-4 border-t bg-background">
-                <div className="container mx-auto flex items-center justify-center gap-4 text-sm text-muted-foreground">
-                <span>© {new Date().getFullYear()} Colegio San Francisco Javier</span>
-                <span>|</span>
-                <Image src="https://res.cloudinary.com/duys6asgx/image/upload/v1759331112/Logo_insignia_a_color_smffkw.png" alt="Logo en footer" width={35} height={24} className="object-contain"/>
-                </div>
-            </footer>
+                <main className="flex-1 p-4 sm:p-6 lg:p-8 relative">
+                    {children}
+                </main>
+                <footer className="relative p-4 border-t border-white/20">
+                    <div className="container mx-auto flex items-center justify-center gap-4 text-sm text-primary-foreground/80">
+                        <span>© {new Date().getFullYear()} Colegio San Francisco Javier</span>
+                        <span>|</span>
+                        <Image src="https://res.cloudinary.com/duys6asgx/image/upload/v1759331112/Logo_insignia_a_color_smffkw.png" alt="Logo en footer" width={35} height={24} className="object-contain"/>
+                    </div>
+                </footer>
             </div>
+          </div>
       </SidebarInset>
     </SidebarProvider>
   );
