@@ -16,7 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Clock, Newspaper, LoaderCircle } from "lucide-react";
+import { PlusCircle, Clock, Newspaper, Download, CalendarDays } from "lucide-react";
 import { auth, db } from "@/lib/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar } from "@/components/ui/calendar";
@@ -70,7 +70,6 @@ export default function NewsAndCalendarPage() {
         setLoading(true);
         try {
             const newsCollection = collection(db, "news_items");
-            // Ordenamos por eventDate como base para traer los más recientes primero.
             const q = query(newsCollection, orderBy("eventDate", "desc"));
             const querySnapshot = await getDocs(q);
 
@@ -99,28 +98,21 @@ export default function NewsAndCalendarPage() {
     fetchNews();
   }, []);
 
-  // Lógica de Ordenamiento por eventDate
   const sortedNewsItems = React.useMemo(() => {
-    // Separa en futuros y pasados basándose únicamente en eventDate
     const futureItems = newsItems
       .filter(item => item.eventDate && isFuture(item.eventDate))
-      .sort((a, b) => compareAsc(a.eventDate!, b.eventDate!)); // Futuros: del más cercano al más lejano
+      .sort((a, b) => compareAsc(a.eventDate!, b.eventDate!));
 
     const pastItems = newsItems
       .filter(item => !item.eventDate || isPast(item.eventDate))
-      .sort((a, b) => b.eventDate!.getTime() - a.eventDate!.getTime()); // Pasados: del más reciente al más antiguo
+      .sort((a, b) => b.eventDate!.getTime() - a.eventDate!.getTime());
 
     return [...futureItems, ...pastItems];
   }, [newsItems]);
 
-  // Lógica para el calendario (no cambia)
   const events = newsItems
     .filter(item => item.category === 'Evento' && item.eventDate)
-    .map(item => ({
-        id: item.id,
-        title: item.title,
-        eventDate: item.eventDate!
-    }));
+    .map(item => ({ id: item.id, title: item.title, eventDate: item.eventDate! }));
 
   const selectedDayEvents = (date 
     ? events.filter(event => format(event.eventDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd'))
@@ -164,7 +156,6 @@ export default function NewsAndCalendarPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {items.map((item) => {
                 const hasEventDatePassed = item.eventDate ? isPast(item.eventDate) : false;
-                // La fecha a mostrar en la tarjeta es siempre eventDate
                 const displayDate = item.eventDate 
                     ? format(item.eventDate, "dd 'de' MMMM, yyyy - HH:mm 'hrs.'", { locale: es })
                     : "Fecha no especificada";
@@ -275,6 +266,27 @@ export default function NewsAndCalendarPage() {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {/* Featured Document Card */}
+      <div className="my-8">
+        <Card>
+            <div className="flex flex-col sm:flex-row items-center justify-between p-6">
+                <div className="flex items-center gap-4 mb-4 sm:mb-0">
+                    <CalendarDays className="h-10 w-10 text-primary flex-shrink-0" />
+                    <div>
+                        <h3 className="text-xl font-bold">Calendario Académico</h3>
+                        <p className="text-muted-foreground">Descarga el calendario académico y de evaluaciones del semestre.</p>
+                    </div>
+                </div>
+                <Button asChild className="flex-shrink-0">
+                    <a href="https://res.cloudinary.com/duys6asgx/raw/upload/v1760022720/test_r29t3j.xlsx" target="_blank" rel="noopener noreferrer">
+                        <Download className="mr-2 h-4 w-4" />
+                        Descargar
+                    </a>
+                </Button>
+            </div>
+        </Card>
       </div>
 
       <div className="mt-6">

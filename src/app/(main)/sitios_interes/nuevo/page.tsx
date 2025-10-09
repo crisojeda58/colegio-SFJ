@@ -167,19 +167,6 @@ export default function NewSitePage() {
                             </FormItem>
                         )}
                     />
-                    <FormField
-                    control={form.control}
-                    name="category"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Categoría</FormLabel>
-                        <FormControl>
-                            <Input placeholder="Ej: Educación" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
                     <div className="flex justify-end gap-2">
                         <Button type="button" variant="outline" onClick={() => router.back()}>
                             Cancelar

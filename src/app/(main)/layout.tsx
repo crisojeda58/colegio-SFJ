@@ -8,17 +8,16 @@ import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
 import {
   ChevronDown,
-  Contact,
-  FolderKanban,
   GalleryVerticalEnd,
   Link2,
   LoaderCircle,
-  MessagesSquare,
+  FileText,
   Cake,
   Newspaper,
-  School,
-  Shield,
+  UserPlus,
+  ChartNetwork,
   Users,
+  GraduationCap,
   Utensils,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -47,15 +46,15 @@ import { AuthProvider, useAuth } from "@/context/AuthContext";
 
 const menuItems = [
     { href: "/noticias", label: "Noticias y Eventos", icon: Newspaper },
-    { href: "/documentos", label: "Documentos", icon: FolderKanban },
+    { href: "/documentos", label: "Documentos", icon: FileText },
     { href: "/sitios_interes", label: "Sitios de Interés", icon: Link2 },
-    { href: "/educadores_ingresos", label: "Educadores Ingresos", icon: Users },
+    { href: "/educadores_ingresos", label: "Educadores Ingresos", icon: UserPlus },
     { href: "/directorio", label: "Directorio", icon: Users },
-    { href: "/jefaturas_curso", label: "Jefaturas de curso", icon: Contact },
+    { href: "/jefaturas_curso", label: "Jefaturas de curso", icon: GraduationCap },
     { href: "/cumpleanos", label: "Cumpleaños", icon: Cake },
     { href: "/cocina", label: "Menu Casino", icon: Utensils },
     { href: "/galeria", label: "Galería", icon: GalleryVerticalEnd },
-    { href: "/gestion", label: "Gestión", icon: Shield, roles: ["Admin Intranet"] },
+    { href: "/gestion", label: "Gestión", icon: ChartNetwork, roles: ["Admin Intranet"] },
 ];
 
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
