@@ -40,7 +40,6 @@ export default function CourseHeadsPage() {
         setCourseHeads(headsList);
       } catch (error) {
         console.error("Error fetching course heads: ", error);
-        // Aquí podrías usar un toast para notificar el error
       } finally {
         setLoading(false);
       }

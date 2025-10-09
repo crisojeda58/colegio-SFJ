@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { ArrowUpRight, Book, Landmark, Microscope, Plus, Globe, Trash2 } from "lucide-react";
+import { ArrowUpRight, Book, Landmark, Microscope, Plus, Globe, Trash2, Loader2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
@@ -35,6 +35,7 @@ export default function SitiosDeInteresPage() {
   const [loading, setLoading] = useState(true);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [siteToDelete, setSiteToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
   const { userProfile } = useAuth();
 
@@ -45,7 +46,6 @@ export default function SitiosDeInteresPage() {
         const sitesCollection = collection(db, "sites");
         const querySnapshot = await getDocs(sitesCollection);
         const sitesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Site));
-        // Ordenar los sitios alfabéticamente por título
         sitesList.sort((a, b) => a.title.localeCompare(b.title));
         setSites(sitesList);
       } catch (error) {
@@ -65,6 +65,7 @@ export default function SitiosDeInteresPage() {
 
   const handleDeleteSite = async () => {
     if (!siteToDelete) return;
+    setIsDeleting(true);
     try {
       await deleteDoc(doc(db, "sites", siteToDelete));
       setSites(prevSites => prevSites.filter(site => site.id !== siteToDelete));
@@ -75,6 +76,7 @@ export default function SitiosDeInteresPage() {
     } finally {
       setIsDeleteDialogOpen(false);
       setSiteToDelete(null);
+      setIsDeleting(false);
     }
   };
 
@@ -93,7 +95,7 @@ export default function SitiosDeInteresPage() {
           </Button>
         )}
       </div>
-      <p className="text-card/80 mb-8 font-bold">
+      <p className="text-white mb-8 font-bold">
         Una colección de enlaces a recursos externos, portales educativos y sitios de relevancia para nuestra comunidad escolar.
       </p>
 
@@ -107,28 +109,38 @@ export default function SitiosDeInteresPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteSite} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Sí, eliminar</AlertDialogAction>
+            <AlertDialogAction onClick={handleDeleteSite} disabled={isDeleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {isDeleting ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Eliminando...</>
+              ) : (
+                "Sí, eliminar"
+              )}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array.from({ length: 6 }).map((_, index) => (
-             <Card key={index} className="flex flex-col">
-             <CardHeader className="flex-row gap-4 items-center">
-                 <Skeleton className="w-12 h-12 p-3 rounded-lg" />
-                 <Skeleton className="h-6 w-40" />
-             </CardHeader>
-             <CardContent className="flex-grow flex flex-col justify-between">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <Card key={index} className="flex flex-col">
+              <CardHeader className="flex-row gap-4 items-center">
+                <Skeleton className="w-12 h-12 p-3 rounded-lg" />
                 <div className="space-y-2">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-2/3" />
+                  <Skeleton className="h-6 w-40" />
                 </div>
-                 <Skeleton className="h-10 w-full mt-4" />
-             </CardContent>
-           </Card>
+              </CardHeader>
+              <CardContent className="flex-grow flex flex-col justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-5/6" />
+                </div>
+                <div className="flex items-center gap-2 mt-4">
+                  <Skeleton className="h-10 flex-grow" />
+                  <Skeleton className="h-10 w-10" />
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       ) : sites.length > 0 ? (
@@ -137,26 +149,29 @@ export default function SitiosDeInteresPage() {
             const Icon = iconMap[site.icon] || Globe;
             return (
               <Card key={site.id} className="flex flex-col group hover:border-primary hover:shadow-lg transition-all duration-300">
-                <CardHeader className="flex-row gap-4 items-start justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-primary/10 rounded-lg">
-                      <Icon className="h-6 w-6 text-primary" />
-                    </div>
-                    <CardTitle className="text-lg text-card-foreground group-hover:text-primary pt-2">{site.title}</CardTitle>
+                <CardHeader className="flex-row gap-4 items-center">
+                  <div className="p-3 bg-primary/10 rounded-lg">
+                    <Icon className="h-6 w-6 text-primary" />
                   </div>
-                  {isAdmin && (
-                    <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => openDeleteDialog(site.id)}>
-                      <Trash2 className="h-5 w-5" />
-                    </Button>
-                  )}
+                  <CardTitle className="text-lg text-card-foreground group-hover:text-primary">{site.title}</CardTitle>
                 </CardHeader>
                 <CardContent className="flex-grow flex flex-col justify-between">
-                  <Button asChild className="w-full mt-auto bg-foreground text-background hover:bg-foreground/80">
-                    <a href={site.href} target="_blank" rel="noopener noreferrer">
-                      Visitar Sitio
-                      <ArrowUpRight className="ml-2 h-4 w-4" />
-                    </a>
-                  </Button>
+                  <p className="text-sm text-muted-foreground mb-4 group-hover:text-foreground/80 transition-colors">
+                    {site.description}
+                  </p>
+                  <div className="flex items-center gap-2 mt-auto">
+                    <Button asChild className="flex-grow bg-foreground text-background hover:bg-foreground/80">
+                      <a href={site.href} target="_blank" rel="noopener noreferrer">
+                        Visitar
+                        <ArrowUpRight className="ml-2 h-4 w-4" />
+                      </a>
+                    </Button>
+                    {isAdmin && (
+                      <Button variant="outline" size="icon" className="text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => openDeleteDialog(site.id)}>
+                        <Trash2 className="h-5 w-5" />
+                      </Button>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             );

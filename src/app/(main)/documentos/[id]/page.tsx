@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useParams } from 'next/navigation';
 import { ArrowLeft, FileText, PlusCircle, Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,19 +34,23 @@ interface StoredFile {
   url: string;
 }
 
-export default function FolderContentPage({ params }: { params: { id: string } }) {
+export default function FolderContentPage() {
+  const params = useParams();
+  const folderId = params.id as string;
+
   const { toast } = useToast();
   const [folderName, setFolderName] = React.useState("Cargando...");
   const [files, setFiles] = React.useState<StoredFile[]>([]);
   const [isUploadDialogOpen, setUploadDialogOpen] = React.useState(false);
-  const [fileToUpload, setFileToUpload] = React.useState<File | null>(null); // Using browser's built-in File type
+  const [fileToUpload, setFileToUpload] = React.useState<File | null>(null);
   const [isUploading, setIsUploading] = React.useState(false);
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Fetch folder details and files
   React.useEffect(() => {
-    const folderDocRef = doc(db, "docs_folders", params.id);
+    if (!folderId) return;
+
+    const folderDocRef = doc(db, "docs_folders", folderId);
     getDoc(folderDocRef).then((docSnap) => {
       if (docSnap.exists()) {
         setFolderName(docSnap.data().name);
@@ -64,7 +69,7 @@ export default function FolderContentPage({ params }: { params: { id: string } }
     });
 
     return () => unsubscribe();
-  }, [params.id]);
+  }, [folderId]);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -93,25 +98,33 @@ export default function FolderContentPage({ params }: { params: { id: string } }
       formData.append("file", fileToUpload);
       formData.append("upload_preset", uploadPreset);
       formData.append("folder", `intranet_colegio/documentos/${folderName}`);
+      formData.append("resource_type", "auto"); // Let Cloudinary auto-detect the file type
 
-      const isImage = fileToUpload.type.startsWith("image/");
-      const resourceType = isImage ? "image" : "raw";
-      const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`;
+      // Use the generic upload endpoint
+      const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/upload`;
 
       const uploadResponse = await fetch(uploadUrl, { method: "POST", body: formData });
 
       if (!uploadResponse.ok) {
+        const errorText = await uploadResponse.text();
+        console.error("Cloudinary upload failed:", errorText);
         throw new Error("Falló la subida del archivo a Cloudinary.");
       }
 
       const result = await uploadResponse.json();
-      const { public_id, secure_url } = result;
+      // For non-image files, the URL for download needs the fl_attachment flag.
+      let secure_url = result.secure_url;
+      if (result.resource_type === 'raw') {
+        const urlParts = secure_url.split('/upload/');
+        secure_url = `${urlParts[0]}/upload/fl_attachment/${urlParts[1]}`;
+      }
 
-      const folderDocRef = doc(db, "docs_folders", params.id);
+
+      const folderDocRef = doc(db, "docs_folders", folderId);
       await addDoc(collection(folderDocRef, "files"), {
         name: fileToUpload.name,
         url: secure_url,
-        public_id: public_id,
+        public_id: result.public_id,
         createdAt: new Date(),
       });
 
