@@ -198,7 +198,7 @@ export default function NewsAndCalendarPage() {
           <Button asChild>
             <Link href="/noticias/nuevo">
               <PlusCircle className="mr-2" />
-              Crear Publicación
+              Crear Publicacion
             </Link>
           </Button>
         )}
@@ -276,13 +276,13 @@ export default function NewsAndCalendarPage() {
                     <CalendarDays className="h-10 w-10 text-primary flex-shrink-0" />
                     <div>
                         <h3 className="text-xl font-bold">Calendario Académico</h3>
-                        <p className="text-muted-foreground">Descarga el calendario académico y de evaluaciones del semestre.</p>
+                        <p className="text-muted-foreground">Abiri el calendario académico del semestre.</p>
                     </div>
                 </div>
                 <Button asChild className="flex-shrink-0">
-                    <a href="https://res.cloudinary.com/duys6asgx/raw/upload/v1760022720/test_r29t3j.xlsx" target="_blank" rel="noopener noreferrer">
+                    <a href="https://docs.google.com/spreadsheets/d/1cOF3vSqxB5LitnEP5wh3oosANMDft28ZOl90k2PxlTw/edit?gid=0#gid=0" target="_blank" rel="noopener noreferrer">
                         <Download className="mr-2 h-4 w-4" />
-                        Descargar
+                        Abrir
                     </a>
                 </Button>
             </div>

@@ -146,7 +146,7 @@ export default function NewsDetailPage() {
     return (
         <div className="container mx-auto text-center">
             <p>La noticia solicitada no existe o no se pudo cargar.</p>
-            <Button onClick={() => router.push('/noticias')} className="mt-4">Volver a Noticias</Button>
+            <Button onClick={() => router.push('/noticias')} className="mt-4">Volver</Button>
         </div>
     )
   }
@@ -158,9 +158,9 @@ export default function NewsDetailPage() {
   return (
     <div className="container mx-auto max-w-4xl">
       <div className="mb-6 flex justify-between items-center">
-        <Button variant="ghost" onClick={() => router.push('/noticias')}>
+        <Button className="bg-white text-black hover:bg-white" onClick={() => router.push('/noticias')}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Volver a Noticias
+          Volver
         </Button>
 
         {canManage && (
@@ -168,7 +168,7 @@ export default function NewsDetailPage() {
                 <Button variant="outline" asChild>
                     <Link href={`/noticias/editar/${newsItem.id}`}>
                         <Pencil className="mr-2 h-4 w-4" />
-                        Editar Noticia
+                        Editar
                     </Link>
                 </Button>
                 {isAdmin && (
@@ -176,7 +176,7 @@ export default function NewsDetailPage() {
                         <AlertDialogTrigger asChild>
                             <Button variant="destructive">
                                 <Trash2 className="mr-2 h-4 w-4" />
-                                Eliminar Noticia
+                                Eliminar
                             </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>

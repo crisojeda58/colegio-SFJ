@@ -223,7 +223,7 @@ export default function NewNewsPage() {
                                 </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                                <SelectItem value="Noticia">Noticia</SelectItem>
+                                <SelectItem value="Noticia">Aviso</SelectItem>
                                 <SelectItem value="Evento">Evento</SelectItem>
                             </SelectContent>
                         </Select>
