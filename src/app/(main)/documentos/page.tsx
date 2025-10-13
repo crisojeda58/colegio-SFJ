@@ -17,12 +17,14 @@ import { collection, addDoc, onSnapshot, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Folder as FolderType } from "@/types/folder";
 import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 
 export default function DocumentosPage() {
   const [folders, setFolders] = React.useState<FolderType[]>([]);
   const [newFolderName, setNewFolderName] = React.useState("");
   const [newFolderImageUrl, setNewFolderImageUrl] = React.useState("");
   const [isCreateFolderOpen, setCreateFolderOpen] = React.useState(false);
+  const { userProfile } = useAuth();
 
   React.useEffect(() => {
     const q = query(collection(db, "docs_folders"));
@@ -53,40 +55,42 @@ export default function DocumentosPage() {
     <div className="container mx-auto">
       <div className="flex justify-between items-center mb-2">
         <h1 className="text-3xl font-bold text-card">Documentos</h1>
-        <Dialog open={isCreateFolderOpen} onOpenChange={setCreateFolderOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <PlusCircle className="mr-2" />
-              Nueva Carpeta
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Crear Nueva Carpeta</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div>
-                <Label htmlFor="folder-name">Nombre de la carpeta</Label>
-                <Input
-                  id="folder-name"
-                  value={newFolderName}
-                  onChange={(e) => setNewFolderName(e.target.value)}
-                  placeholder="Ej: Documentos Importantes"
-                />
+        {userProfile?.role === "Admin Intranet" && (
+          <Dialog open={isCreateFolderOpen} onOpenChange={setCreateFolderOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <PlusCircle className="mr-2" />
+                Nueva Carpeta
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Crear Nueva Carpeta</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div>
+                  <Label htmlFor="folder-name">Nombre de la carpeta</Label>
+                  <Input
+                    id="folder-name"
+                    value={newFolderName}
+                    onChange={(e) => setNewFolderName(e.target.value)}
+                    placeholder="Ej: Documentos Importantes"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="folder-image-url">URL de la imagen</Label>
+                  <Input
+                    id="folder-image-url"
+                    value={newFolderImageUrl}
+                    onChange={(e) => setNewFolderImageUrl(e.target.value)}
+                    placeholder="https://ejemplo.com/imagen.png"
+                  />
+                </div>
               </div>
-              <div>
-                <Label htmlFor="folder-image-url">URL de la imagen</Label>
-                <Input
-                  id="folder-image-url"
-                  value={newFolderImageUrl}
-                  onChange={(e) => setNewFolderImageUrl(e.target.value)}
-                  placeholder="https://ejemplo.com/imagen.png"
-                />
-              </div>
-            </div>
-            <Button onClick={handleCreateFolder}>Crear Carpeta</Button>
-          </DialogContent>
-        </Dialog>
+              <Button onClick={handleCreateFolder}>Crear Carpeta</Button>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       <main className="flex-1 bg-transparent">

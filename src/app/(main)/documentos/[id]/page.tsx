@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, FileText, PlusCircle, Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ import { Label } from "@/components/ui/label";
 import { db } from "@/lib/firebase";
 import { collection, doc, getDoc, addDoc, onSnapshot, query } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
 // Define the type for a file stored in Firestore
 interface StoredFile {
@@ -35,8 +36,10 @@ interface StoredFile {
 }
 
 export default function FolderContentPage() {
+  const router = useRouter();
   const params = useParams();
   const folderId = params.id as string;
+  const { userProfile } = useAuth();
 
   const { toast } = useToast();
   const [folderName, setFolderName] = React.useState("Cargando...");
@@ -144,34 +147,34 @@ export default function FolderContentPage() {
   return (
     <div className="container mx-auto">
       <div className="flex justify-between items-center mb-4">
-        <Link href="/documentos">
-          <Button variant="ghost">
-            <ArrowLeft className="mr-2" />
+        <Button className="bg-white text-black hover:bg-white" onClick={() => router.push('/documentos')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
             Volver
-          </Button>
-        </Link>
-        <Dialog open={isUploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <PlusCircle className="mr-2" />
-              Subir Archivo
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Subir Nuevo Archivo</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div>
-                <Label htmlFor="file-upload">Selecciona un archivo</Label>
-                <Input id="file-upload" type="file" ref={fileInputRef} onChange={handleFileSelect} />
+        </Button>
+        {userProfile?.role === "Admin Intranet" && (
+          <Dialog open={isUploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <PlusCircle className="mr-2" />
+                Subir Archivo
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Subir Nuevo Archivo</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div>
+                  <Label htmlFor="file-upload">Selecciona un archivo</Label>
+                  <Input id="file-upload" type="file" ref={fileInputRef} onChange={handleFileSelect} />
+                </div>
               </div>
-            </div>
-            <Button onClick={handleUpload} disabled={isUploading}>
-              {isUploading ? "Subiendo..." : "Subir Archivo"}
-            </Button>
-          </DialogContent>
-        </Dialog>
+              <Button onClick={handleUpload} disabled={isUploading}>
+                {isUploading ? "Subiendo..." : "Subir Archivo"}
+              </Button>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       <h1 className="text-3xl font-bold text-card mb-4">{folderName}</h1>
