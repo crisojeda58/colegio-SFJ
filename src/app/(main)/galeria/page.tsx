@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
@@ -24,13 +24,29 @@ const ImageCard = ({ src, alt }: { src: string; alt: string; }) => (
     <DialogTrigger asChild>
       <Card className="overflow-hidden cursor-pointer group hover:shadow-xl transition-shadow">
         <div className="relative aspect-w-1 aspect-h-1">
-          <Image src={src} alt={alt} width={800} height={600} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300" />
+          <Image 
+            src={src} 
+            alt={alt} 
+            width={800} 
+            height={600} 
+            className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            placeholder="blur"
+            blurDataURL="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4IDUiPjxyZWN0IHdpZHRoPSI4IiBoZWlnaHQ9IjUiIGZpbGw9IiNlMmV4ZjAiLz48L3N2Zz4="
+            quality={75}
+          />
         </div>
       </Card>
     </DialogTrigger>
     <DialogContent className="max-w-4xl p-0">
       <div className="relative aspect-video">
-        <Image src={src} alt={alt} layout="fill" objectFit="contain" />
+        <Image 
+          src={src} 
+          alt={alt} 
+          layout="fill" 
+          objectFit="contain" 
+          quality={85}
+        />
       </div>
     </DialogContent>
   </Dialog>
@@ -40,8 +56,8 @@ export default function GalleryPage() {
   return (
     <div className="container mx-auto">
       <h1 className="text-3xl font-bold mb-6 text-card">Galería Multimedia</h1>
-      <Tabs defaultValue="aniversario" orientation="vertical" className="flex gap-8">
-        <TabsList className="flex flex-col h-auto">
+      <Tabs defaultValue="aniversario" orientation="vertical" className="flex flex-col md:flex-row gap-8">
+        <TabsList className="flex flex-row md:flex-col h-auto md:h-full">
           <TabsTrigger value="aniversario">Aniversario 2023</TabsTrigger>
           <TabsTrigger value="feriaCientifica">Feria Científica</TabsTrigger>
           <TabsTrigger value="diaDeporte">Día del Deporte</TabsTrigger>

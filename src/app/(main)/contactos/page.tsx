@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, getDocs, query, where, orderBy } from "firebase/firestore";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,17 +10,19 @@ import { Mail, Phone, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Employee {
   id: string;
   name: string;
   department: string;
+  jobTitle: string;
   email: string;
   phone?: string;
-  status: string;
+  avatarUrl?: string;
 }
 
-export default function ColleaguesPage() {
+export default function DirectoryPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,11 +33,7 @@ export default function ColleaguesPage() {
       setLoading(true);
       try {
         const usersCollection = collection(db, "users");
-        const q = query(
-            usersCollection, 
-            where("status", "==", "nuevo"),
-            orderBy("name")
-        );
+        const q = query(usersCollection, orderBy("name"));
         const querySnapshot = await getDocs(q);
         const usersList = querySnapshot.docs.map(doc => ({
           id: doc.id,
@@ -57,19 +55,18 @@ export default function ColleaguesPage() {
   useEffect(() => {
     const lowercasedFilter = searchTerm.toLowerCase();
     const filteredData = employees.filter((item) => {
-      return (
-        item.name.toLowerCase().includes(lowercasedFilter) ||
-        item.department.toLowerCase().includes(lowercasedFilter) ||
-        (item.phone && item.phone.toLowerCase().includes(lowercasedFilter))
-      );
+      const nameMatch = (item.name ?? '').toLowerCase().includes(lowercasedFilter);
+      const departmentMatch = (item.department ?? '').toLowerCase().includes(lowercasedFilter);
+      const phoneMatch = (item.phone ?? '').toLowerCase().includes(lowercasedFilter);
+      return nameMatch || departmentMatch || phoneMatch;
     });
     setFilteredEmployees(filteredData);
   }, [searchTerm, employees]);
 
+
   return (
     <div className="container mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-card">Nuevos Educadores</h1>
-      <p className="text-card mb-6">Colegas que se han unido este año.</p>
+      <h1 className="text-3xl font-bold mb-6 text-card">Contacto de educadores</h1>
       <div className="relative mb-6">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
         <Input
@@ -79,34 +76,53 @@ export default function ColleaguesPage() {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
-      <Card className="bg-indigo-100">
+      <Card>
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="text-foreground font-bold">Nombre</TableHead>
               <TableHead className="text-foreground font-bold">Departamento</TableHead>
+              <TableHead className="text-foreground font-bold">Cargo</TableHead>
               <TableHead className="text-foreground font-bold">Teléfono</TableHead>
               <TableHead className="text-foreground font-bold">Email</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              Array.from({ length: 3 }).map((_, index) => (
+              Array.from({ length: 5 }).map((_, index) => (
                 <TableRow key={index}>
-                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-9 w-9 rounded-full" />
+                      <Skeleton className="h-4 w-32" />
+                    </div>
+                  </TableCell>
                   <TableCell><Skeleton className="h-6 w-28 rounded-full" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-2">
+                        <Skeleton className="h-4 w-48" />
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
               filteredEmployees.map((employee) => (
                 <TableRow key={employee.id}>
                   <TableCell>
-                    <span className="font-medium">{employee.name}</span>
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage src={employee.avatarUrl || `https://avatar.vercel.sh/${employee.name}.png`} alt={employee.name} />
+                        <AvatarFallback>{employee.name.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <span className="font-medium">{employee.name}</span>
+                    </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary">{employee.department}</Badge>
+                    <span className="font-medium">{employee.department}</span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-medium">{employee.jobTitle}</span>
                   </TableCell>
                   <TableCell>
                     {employee.phone ? (
@@ -130,7 +146,7 @@ export default function ColleaguesPage() {
             {!loading && filteredEmployees.length === 0 && (
                 <TableRow>
                     <TableCell colSpan={4} className="h-24 text-center">
-                        No hay colegas nuevos este año.
+                        No se encontraron resultados.
                     </TableCell>
                 </TableRow>
             )}

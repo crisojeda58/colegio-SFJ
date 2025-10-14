@@ -17,6 +17,7 @@ import { collection, addDoc, onSnapshot, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Folder as FolderType } from "@/types/folder";
 import Link from "next/link";
+import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
 
 export default function DocumentosPage() {
@@ -105,10 +106,13 @@ export default function DocumentosPage() {
                   >
                     <CardHeader>
                       <div className="relative w-full h-32">
-                        <img
+                        <Image
                           src={folder.imageUrl}
                           alt={folder.name}
-                          className="w-full h-full object-cover rounded-md"
+                          fill
+                          style={{ objectFit: 'cover' }}
+                          className="rounded-md"
+                          quality={75}
                         />
                       </div>
                     </CardHeader>

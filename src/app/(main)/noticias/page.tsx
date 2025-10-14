@@ -154,7 +154,7 @@ export default function NewsAndCalendarPage() {
     }
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {items.map((item) => {
+            {items.map((item, index) => {
                 const hasEventDatePassed = item.eventDate ? isPast(item.eventDate) : false;
                 const displayDate = item.eventDate 
                     ? format(item.eventDate, "dd 'de' MMMM, yyyy - HH:mm 'hrs.'", { locale: es })
@@ -164,7 +164,15 @@ export default function NewsAndCalendarPage() {
                     <Link href={`/noticias/${item.id}`} key={item.id} className="block transform transition-transform duration-200 hover:scale-[1.02]">
                         <Card className="flex flex-col overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full">
                         <div className="relative w-full h-48">
-                            <Image src={item.imageUrl} alt={item.title} layout="fill" objectFit="cover" />
+                            <Image 
+                                src={item.imageUrl} 
+                                alt={item.title} 
+                                layout="fill" 
+                                objectFit="cover"
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                quality={75}
+                                priority={index < NEWS_PER_PAGE}
+                             />
                         </div>
                         <CardHeader>
                             <div className="flex justify-between items-center mb-2">
@@ -193,7 +201,7 @@ export default function NewsAndCalendarPage() {
           <h2 className="text-6xl font-bold">Bienvenidos a la Intranet de Educadores</h2>
       </div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-card">Portal de Noticias y Eventos</h1>
+        <h1 className="text-3xl font-bold text-card">Avisos y Eventos</h1>
         {canCreateNews && (
           <Button asChild>
             <Link href="/noticias/nuevo">

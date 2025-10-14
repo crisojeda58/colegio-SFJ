@@ -1,13 +1,20 @@
 
+import Image from "next/image";
 import { School } from "lucide-react";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div
-      className="min-h-screen bg-cover bg-center flex items-center justify-center p-4"
-      style={{ backgroundImage: "url('https://res.cloudinary.com/duys6asgx/image/upload/v1758821648/campanario_zd6suo.webp')" }}
-    >
-      <div className="absolute inset-0 bg-black/65" />
+    <div className="min-h-screen relative flex items-center justify-center p-4">
+      <Image
+        src="https://res.cloudinary.com/duys6asgx/image/upload/v1758821648/campanario_zd6suo.webp"
+        alt="Fondo del campanario del colegio"
+        fill
+        style={{ objectFit: 'cover' }}
+        className="-z-10"
+        quality={80}
+        priority
+      />
+      <div className="absolute inset-0 bg-black/65 -z-10" />
       <div className="relative w-full max-w-md">
         <div className="flex justify-center mb-6">
             <div className="flex items-center gap-2 text-white">

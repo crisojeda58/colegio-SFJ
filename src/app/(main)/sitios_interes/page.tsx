@@ -1,18 +1,18 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
-import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { useState, useEffect, useCallback } from "react";
+import { collection, getDocs, deleteDoc, doc, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { ArrowUpRight, Book, Landmark, Microscope, Plus, Globe, Trash2, Loader2 } from "lucide-react";
+import { ArrowUpRight, Book, Landmark, Microscope, Globe, Trash2, Loader2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
+import { NewSiteDialog } from "./new-site-dialog";
 
 interface Site {
   id: string;
@@ -39,24 +39,25 @@ export default function SitiosDeInteresPage() {
   const { toast } = useToast();
   const { userProfile } = useAuth();
 
-  useEffect(() => {
-    const fetchSites = async () => {
-      setLoading(true);
-      try {
-        const sitesCollection = collection(db, "sites");
-        const querySnapshot = await getDocs(sitesCollection);
-        const sitesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Site));
-        sitesList.sort((a, b) => a.title.localeCompare(b.title));
-        setSites(sitesList);
-      } catch (error) {
-        console.error("Error fetching sites: ", error);
-        toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los sitios de interés.' });
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchSites();
+  const fetchSites = useCallback(async () => {
+    setLoading(true);
+    try {
+      const sitesCollection = collection(db, "sites");
+      const q = query(sitesCollection, orderBy("title"));
+      const querySnapshot = await getDocs(q);
+      const sitesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Site));
+      setSites(sitesList);
+    } catch (error) {
+      console.error("Error fetching sites: ", error);
+      toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los sitios de interés.' });
+    } finally {
+      setLoading(false);
+    }
   }, [toast]);
+
+  useEffect(() => {
+    fetchSites();
+  }, [fetchSites]);
 
   const openDeleteDialog = (siteId: string) => {
     setSiteToDelete(siteId);
@@ -86,14 +87,7 @@ export default function SitiosDeInteresPage() {
     <div className="container mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-card">Sitios de Interés</h1>
-        {isAdmin && (
-          <Button asChild>
-            <Link href="/sitios_interes/nuevo">
-              <Plus className="mr-2 h-4 w-4" />
-              Crear Nuevo Sitio
-            </Link>
-          </Button>
-        )}
+        {isAdmin && <NewSiteDialog onSiteCreated={fetchSites} />}
       </div>
       <p className="text-white mb-8 font-bold">
         Una colección de enlaces a recursos externos, portales educativos y sitios de relevancia para nuestra comunidad escolar.
@@ -182,6 +176,7 @@ export default function SitiosDeInteresPage() {
           <CardContent className="pt-6 flex flex-col items-center justify-center h-48">
             <Globe className="h-12 w-12 text-muted-foreground mb-4" />
             <p className="text-center text-muted-foreground">No hay sitios de interés para mostrar.</p>
+            <p className="text-sm text-muted-foreground">¡Crea el primero!</p>
           </CardContent>
         </Card>
       )}

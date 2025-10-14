@@ -2,15 +2,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { collection, getDocs, query, where, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Mail, Phone, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Employee {
   id: string;
@@ -18,10 +18,12 @@ interface Employee {
   department: string;
   email: string;
   phone?: string;
+  status: string;
+  jobTitle: string;
   avatarUrl?: string;
 }
 
-export default function DirectoryPage() {
+export default function ColleaguesPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +34,11 @@ export default function DirectoryPage() {
       setLoading(true);
       try {
         const usersCollection = collection(db, "users");
-        const q = query(usersCollection, orderBy("name"));
+        const q = query(
+            usersCollection, 
+            where("status", "==", "nuevo"),
+            orderBy("name")
+        );
         const querySnapshot = await getDocs(q);
         const usersList = querySnapshot.docs.map(doc => ({
           id: doc.id,
@@ -65,7 +71,8 @@ export default function DirectoryPage() {
 
   return (
     <div className="container mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-card">Directorio de Empleados</h1>
+      <h1 className="text-3xl font-bold mb-6 text-card">Nuevos Educadores</h1>
+      <p className="text-card mb-6">Colegas que se han unido este año.</p>
       <div className="relative mb-6">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
         <Input
@@ -75,7 +82,7 @@ export default function DirectoryPage() {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
-      <Card>
+      <Card className="bg-indigo-100">
         <Table>
           <TableHeader>
             <TableRow>
@@ -87,21 +94,12 @@ export default function DirectoryPage() {
           </TableHeader>
           <TableBody>
             {loading ? (
-              Array.from({ length: 5 }).map((_, index) => (
+              Array.from({ length: 3 }).map((_, index) => (
                 <TableRow key={index}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Skeleton className="h-9 w-9 rounded-full" />
-                      <Skeleton className="h-4 w-32" />
-                    </div>
-                  </TableCell>
+                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                   <TableCell><Skeleton className="h-6 w-28 rounded-full" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-2">
-                        <Skeleton className="h-4 w-48" />
-                    </div>
-                  </TableCell>
+                  <TableCell><Skeleton className="h-4 w-48" /></TableCell>
                 </TableRow>
               ))
             ) : (
@@ -117,7 +115,10 @@ export default function DirectoryPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary">{employee.department}</Badge>
+                    <span className="font-medium">{employee.department}</span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-medium">{employee.jobTitle}</span>
                   </TableCell>
                   <TableCell>
                     {employee.phone ? (
@@ -141,7 +142,7 @@ export default function DirectoryPage() {
             {!loading && filteredEmployees.length === 0 && (
                 <TableRow>
                     <TableCell colSpan={4} className="h-24 text-center">
-                        No se encontraron resultados.
+                        No hay colegas nuevos este año.
                     </TableCell>
                 </TableRow>
             )}
