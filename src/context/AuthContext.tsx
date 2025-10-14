@@ -7,13 +7,14 @@ import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 
-interface UserProfile {
+export interface UserProfile {
+  uid: string;
   name: string;
   email: string;
   role: string;
 }
 
-interface AuthContextType {
+export interface AuthContextType {
   user: User | null;
   userProfile: UserProfile | null;
   loading: boolean;
@@ -35,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userDocSnap = await getDoc(userDocRef);
         if (userDocSnap.exists()) {
           const data = userDocSnap.data();
-          setUserProfile({ name: data.name, email: data.email, role: data.role });
+          setUserProfile({ uid: user.uid, name: data.name, email: data.email, role: data.role });
         } else {
             // Handle case where user exists in Auth but not in Firestore
             setUserProfile(null);

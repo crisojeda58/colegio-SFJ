@@ -1,10 +1,9 @@
+
 "use client";
 
 import Image from "next/image";
 import * as React from "react";
-import Link from "next/link";
-import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc, collection, getDocs, query, orderBy, Timestamp } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, Timestamp } from "firebase/firestore";
 import { format, isPast, isFuture, compareAsc } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -16,15 +15,18 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Clock, Newspaper, Download, CalendarDays } from "lucide-react";
-import { auth, db } from "@/lib/firebase";
+import { Clock, Newspaper, Download, CalendarDays } from "lucide-react";
+import { db } from "@/lib/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
+import { NewPostDialog } from "./new-post-dialog";
+import { PostDetailDialog } from "./post-detail-dialog"; // Import the new dialog
 
 const NEWS_PER_PAGE = 6;
 
-interface NewsItem {
+export interface NewsItem {
     id: string;
     title: string;
     excerpt: string;
@@ -32,10 +34,8 @@ interface NewsItem {
     category: "Noticia" | "Evento";
     publishedAt?: Date;
     eventDate?: Date;
-}
-
-interface UserProfile {
-    role: string;
+    content: string; // Add content for detail view
+    authorName: string; // Add authorName for detail view
 }
 
 interface Event {
@@ -44,59 +44,48 @@ interface Event {
   eventDate: Date;
 }
 
+const ALLOWED_ROLES = ['Jefe de departamento', 'Admin Intranet'];
+
 export default function NewsAndCalendarPage() {
-  const [userProfile, setUserProfile] = React.useState<UserProfile | null>(null);
+  const { user, userProfile } = useAuth();
   const [newsItems, setNewsItems] = React.useState<NewsItem[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [date, setDate] = React.useState<Date | undefined>(new Date());
   const [visibleNewsCount, setVisibleNewsCount] = React.useState(NEWS_PER_PAGE);
 
-  React.useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const userDocRef = doc(db, "users", user.uid);
-        const userDocSnap = await getDoc(userDocRef);
-        if (userDocSnap.exists()) {
-            const data = userDocSnap.data();
-            setUserProfile({ role: data.role });
-        }
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-  
-  React.useEffect(() => {
-    const fetchNews = async () => {
-        setLoading(true);
-        try {
-            const newsCollection = collection(db, "news_items");
-            const q = query(newsCollection, orderBy("eventDate", "desc"));
-            const querySnapshot = await getDocs(q);
+  const fetchNews = React.useCallback(async () => {
+      setLoading(true);
+      try {
+          const newsCollection = collection(db, "news_items");
+          const q = query(newsCollection, orderBy("eventDate", "desc"));
+          const querySnapshot = await getDocs(q);
 
-            const itemsList = querySnapshot.docs.map(doc => {
-                const data = doc.data();
-                const publishedAt = data.publishedAt instanceof Timestamp ? data.publishedAt.toDate() : undefined;
-                const eventDate = data.eventDate instanceof Timestamp ? data.eventDate.toDate() : undefined;
-                return {
-                    id: doc.id,
-                    title: data.title,
-                    excerpt: data.excerpt,
-                    imageUrl: data.imageUrl,
-                    category: data.category,
-                    publishedAt: publishedAt,
-                    eventDate: eventDate,
-                } as NewsItem;
-            });
-            
-            setNewsItems(itemsList);
-        } catch (error) {
-            console.error("Error fetching news items:", error);
-        } finally {
-            setLoading(false);
-        }
-    }
-    fetchNews();
+          const itemsList = querySnapshot.docs.map(doc => {
+              const data = doc.data();
+              return {
+                  id: doc.id,
+                  title: data.title,
+                  excerpt: data.excerpt,
+                  imageUrl: data.imageUrl,
+                  category: data.category,
+                  publishedAt: data.publishedAt instanceof Timestamp ? data.publishedAt.toDate() : undefined,
+                  eventDate: data.eventDate instanceof Timestamp ? data.eventDate.toDate() : undefined,
+                  content: data.content, // Make sure to fetch content
+                  authorName: data.authorName, // Make sure to fetch authorName
+              } as NewsItem;
+          });
+          
+          setNewsItems(itemsList);
+      } catch (error) {
+          console.error("Error fetching news items:", error);
+      } finally {
+          setLoading(false);
+      }
   }, []);
+
+  React.useEffect(() => {
+    fetchNews();
+  }, [fetchNews]);
 
   const sortedNewsItems = React.useMemo(() => {
     const futureItems = newsItems
@@ -105,7 +94,7 @@ export default function NewsAndCalendarPage() {
 
     const pastItems = newsItems
       .filter(item => !item.eventDate || isPast(item.eventDate))
-      .sort((a, b) => b.eventDate!.getTime() - a.eventDate!.getTime());
+      .sort((a, b) => (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0));
 
     return [...futureItems, ...pastItems];
   }, [newsItems]);
@@ -121,7 +110,7 @@ export default function NewsAndCalendarPage() {
 
   const eventDays = events.map(event => event.eventDate);
 
-  const canCreateNews = userProfile?.role === 'Jefe de departamento' || userProfile?.role === 'Admin Intranet';
+  const canCreateNews = userProfile && ALLOWED_ROLES.includes(userProfile.role);
 
   const handleLoadMore = () => {
     setVisibleNewsCount(prevCount => prevCount + NEWS_PER_PAGE);
@@ -158,37 +147,39 @@ export default function NewsAndCalendarPage() {
                 const hasEventDatePassed = item.eventDate ? isPast(item.eventDate) : false;
                 const displayDate = item.eventDate 
                     ? format(item.eventDate, "dd 'de' MMMM, yyyy - HH:mm 'hrs.'", { locale: es })
-                    : "Fecha no especificada";
+                    : (item.publishedAt ? format(item.publishedAt, "dd 'de' MMMM, yyyy", { locale: es }) : "Fecha no especificada");
 
                 return (
-                    <Link href={`/noticias/${item.id}`} key={item.id} className="block transform transition-transform duration-200 hover:scale-[1.02]">
-                        <Card className="flex flex-col overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full">
-                        <div className="relative w-full h-48">
-                            <Image 
-                                src={item.imageUrl} 
-                                alt={item.title} 
-                                layout="fill" 
-                                objectFit="cover"
-                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                quality={75}
-                                priority={index < NEWS_PER_PAGE}
-                             />
+                    <PostDetailDialog key={item.id} newsItemId={item.id} onPostDeleted={fetchNews}>
+                        <div className="block transform transition-transform duration-200 hover:scale-[1.02] cursor-pointer h-full">
+                            <Card className="flex flex-col overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full">
+                                <div className="relative w-full h-48">
+                                    <Image 
+                                        src={item.imageUrl} 
+                                        alt={item.title} 
+                                        layout="fill" 
+                                        objectFit="cover"
+                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                        quality={75}
+                                        priority={index < NEWS_PER_PAGE}
+                                    />
+                                </div>
+                                <CardHeader>
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className={`text-xs font-semibold ${item.category === 'Evento' ? 'text-primary' : 'text-accent-foreground'}`}>
+                                            {displayDate}
+                                        </span>
+                                    </div>
+                                    <CardTitle className={cn(hasEventDatePassed && "text-destructive")}>
+                                        {item.title}
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="flex-grow">
+                                    <CardDescription className="text-foreground">{item.excerpt}</CardDescription>
+                                </CardContent>
+                            </Card>
                         </div>
-                        <CardHeader>
-                            <div className="flex justify-between items-center mb-2">
-                                <span className={`text-xs font-semibold ${item.category === 'Evento' ? 'text-primary' : 'text-accent-foreground'}`}>
-                                    {displayDate}
-                                </span>
-                            </div>
-                            <CardTitle className={cn(hasEventDatePassed && "text-destructive")}>
-                                {item.title}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="flex-grow">
-                            <CardDescription className="text-foreground">{item.excerpt}</CardDescription>
-                        </CardContent>
-                        </Card>
-                    </Link>
+                    </PostDetailDialog>
                 );
             })}
         </div>
@@ -202,13 +193,8 @@ export default function NewsAndCalendarPage() {
       </div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-card">Avisos y Eventos</h1>
-        {canCreateNews && (
-          <Button asChild>
-            <Link href="/noticias/nuevo">
-              <PlusCircle className="mr-2" />
-              Crear Publicacion
-            </Link>
-          </Button>
+        {canCreateNews && user && userProfile && (
+          <NewPostDialog user={user} userProfile={userProfile} onPostCreated={fetchNews} />
         )}
       </div>
 
@@ -252,20 +238,22 @@ export default function NewsAndCalendarPage() {
               ) : selectedDayEvents.length > 0 ? (
                 <div className="space-y-4">
                   {selectedDayEvents.map((event) => (
-                    <Link href={`/noticias/${event.id}`} key={event.id} className="block group">
-                      <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted transition-colors">
-                        <div className="mt-1">
-                            <Newspaper className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                            <p className="font-semibold group-hover:underline">{event.title}</p>
-                            <div className="flex items-center text-sm text-muted-foreground mt-1">
-                                <Clock className="h-4 w-4 mr-1.5" />
-                                <span>{format(event.eventDate, 'HH:mm')} hrs</span>
-                            </div>
+                    <PostDetailDialog key={event.id} newsItemId={event.id} onPostDeleted={fetchNews}>
+                      <div className="block group cursor-pointer">
+                        <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted transition-colors">
+                          <div className="mt-1">
+                              <Newspaper className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                              <p className="font-semibold group-hover:underline">{event.title}</p>
+                              <div className="flex items-center text-sm text-muted-foreground mt-1">
+                                  <Clock className="h-4 w-4 mr-1.5" />
+                                  <span>{format(event.eventDate, 'HH:mm')} hrs</span>
+                              </div>
+                          </div>
                         </div>
                       </div>
-                    </Link>
+                    </PostDetailDialog>
                   ))}
                 </div>
               ) : (

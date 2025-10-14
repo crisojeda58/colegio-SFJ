@@ -45,7 +45,7 @@ import { auth } from "@/lib/firebase";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 
 const menuItems = [
-    { href: "/noticias", label: "Noticias y Eventos", icon: Newspaper },
+    { href: "/inicio", label: "Inicio", icon: Newspaper },
     { href: "/documentos", label: "Documentos", icon: FileText },
     { href: "/sitios_interes", label: "Sitios de Interés", icon: Link2 },
     { href: "/nuevos_educadores", label: "Nuevos Educadores", icon: UserPlus },
