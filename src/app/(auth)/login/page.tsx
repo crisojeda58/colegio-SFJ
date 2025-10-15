@@ -21,7 +21,7 @@ export default function LoginPage() {
         setError('');
         try {
             await signInWithEmailAndPassword(auth, email, password);
-            router.push('/noticias');
+            router.push('/inicio');
         } catch (error: any) {
             console.error("Firebase Auth Error:", error);
             if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {

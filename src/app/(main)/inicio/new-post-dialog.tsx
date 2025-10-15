@@ -190,7 +190,7 @@ export function NewPostDialog({ user, userProfile, onPostCreated }: NewPostDialo
                     <FormControl>
                       <Textarea
                         placeholder="Un resumen corto que aparecerá en la lista de noticias."
-                        className="min-h-[100px]"
+                        className="min-h-[60px]"
                         {...field}
                       />
                     </FormControl>
@@ -207,7 +207,7 @@ export function NewPostDialog({ user, userProfile, onPostCreated }: NewPostDialo
                     <FormControl>
                       <Textarea
                         placeholder="El cuerpo completo del artículo..."
-                        className="min-h-[250px]"
+                        className="min-h-[100px]"
                         {...field}
                       />
                     </FormControl>

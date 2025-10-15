@@ -3,6 +3,7 @@
 
 import Image from "next/image";
 import * as React from "react";
+import dynamic from "next/dynamic";
 import { collection, getDocs, query, orderBy, Timestamp } from "firebase/firestore";
 import { format, isPast, isFuture, compareAsc } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -21,8 +22,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
-import { NewPostDialog } from "./new-post-dialog";
-import { PostDetailDialog } from "./post-detail-dialog"; // Import the new dialog
+
+const NewPostDialog = dynamic(() => import('./new-post-dialog').then(mod => mod.NewPostDialog), { ssr: false });
+const PostDetailDialog = dynamic(() => import('./post-detail-dialog').then(mod => mod.PostDetailDialog), { ssr: false });
 
 const NEWS_PER_PAGE = 6;
 
@@ -157,8 +159,8 @@ export default function NewsAndCalendarPage() {
                                     <Image 
                                         src={item.imageUrl} 
                                         alt={item.title} 
-                                        layout="fill" 
-                                        objectFit="cover"
+                                        fill
+                                        style={{ objectFit: 'cover' }}
                                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                         quality={75}
                                         priority={index < NEWS_PER_PAGE}
@@ -187,9 +189,9 @@ export default function NewsAndCalendarPage() {
   }
 
   return (
-    <div className="container mx-auto">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8">
       <div className="bg-primary text-primary-foreground text-center p-4 rounded-lg mb-6 pb-8 pt-8">
-          <h2 className="text-6xl font-bold">Bienvenidos a la Intranet de Educadores</h2>
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold">Bienvenidos a la Intranet de Educadores</h2>
       </div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-card">Avisos y Eventos</h1>

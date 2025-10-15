@@ -43,8 +43,8 @@ const ImageCard = ({ src, alt }: { src: string; alt: string; }) => (
         <Image 
           src={src} 
           alt={alt} 
-          layout="fill" 
-          objectFit="contain" 
+          fill
+          style={{ objectFit: "contain" }}
           quality={85}
         />
       </div>

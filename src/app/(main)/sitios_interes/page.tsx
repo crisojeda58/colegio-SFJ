@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { collection, getDocs, deleteDoc, doc, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +13,8 @@ import { ArrowUpRight, Book, Landmark, Microscope, Globe, Trash2, Loader2 } from
 import type { LucideIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
-import { NewSiteDialog } from "./new-site-dialog";
+
+const NewSiteDialog = dynamic(() => import('./new-site-dialog').then(mod => mod.NewSiteDialog), { ssr: false });
 
 interface Site {
   id: string;

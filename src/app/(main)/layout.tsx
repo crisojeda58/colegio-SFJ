@@ -129,12 +129,12 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
       </Sidebar>
       <SidebarInset>
         <div className="flex flex-col min-h-screen">
-            <header className="flex items-center justify-between p-4 border-b">
+            <header className="sticky top-0 z-50 w-full flex items-center justify-between p-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 <div className="flex items-center gap-4">
                 <SidebarTrigger>
                     <span className="sr-only">Toggle Sidebar</span>
                 </SidebarTrigger>
-                <Image src="https://res.cloudinary.com/duys6asgx/image/upload/v1759331112/Logo_horizontal_a_color_wqnxlw.png" alt="Logo Navbar" width={120} height={24} className="object-contain" />
+                <h2 className="text-sm font-bold text-blue-900">Colegio San Francisco Javier</h2>
                 </div>
                 <div className="flex items-center gap-4">
                 <DropdownMenu>

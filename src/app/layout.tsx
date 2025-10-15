@@ -22,6 +22,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://www.googleapis.com" />
+        <link rel="dns-prefetch" href="https://www.googleapis.com" />
+        <link rel="preconnect" href="https://colegio-sf.firebaseapp.com" />
+        <link rel="dns-prefetch" href="https://colegio-sf.firebaseapp.com" />
+      </head>
       <body className={`${ptSans.className} antialiased`}>
         {children}
         <Toaster />
