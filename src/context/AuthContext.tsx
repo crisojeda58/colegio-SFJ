@@ -12,6 +12,10 @@ export interface UserProfile {
   name: string;
   email: string;
   role: string;
+  avatarUrl: string;
+  department: string;
+  jobTitle : string;
+  phone: string;
 }
 
 export interface AuthContextType {
@@ -36,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userDocSnap = await getDoc(userDocRef);
         if (userDocSnap.exists()) {
           const data = userDocSnap.data();
-          setUserProfile({ uid: user.uid, name: data.name, email: data.email, role: data.role });
+          setUserProfile({ uid: user.uid, name: data.name, email: data.email, role: data.role, avatarUrl: data.avatarUrl, department: data.department, jobTitle: data.jobTitle, phone: data.phone });
         } else {
             // Handle case where user exists in Auth but not in Firestore
             setUserProfile(null);

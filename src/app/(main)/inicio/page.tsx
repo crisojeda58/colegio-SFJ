@@ -50,7 +50,7 @@ interface Event {
 const ALLOWED_ROLES = ['Admin Intranet'];
 
 export default function NewsAndCalendarPage() {
-  const { user, userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const [newsItems, setNewsItems] = React.useState<NewsItem[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [date, setDate] = React.useState<Date | undefined>(new Date());
@@ -196,8 +196,8 @@ export default function NewsAndCalendarPage() {
       </div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-card">Avisos y Eventos</h1>
-        {canCreateNews && user && userProfile && (
-          <NewPostDialog user={user} userProfile={userProfile} onPostCreated={fetchNews} />
+        {canCreateNews && (
+          <NewPostDialog onPostCreated={fetchNews} />
         )}
       </div>
 

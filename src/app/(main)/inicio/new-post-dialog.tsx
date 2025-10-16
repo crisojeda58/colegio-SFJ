@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -21,8 +20,7 @@ import { Calendar as CalendarIcon, LoaderCircle, Plus } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import type { UserProfile } from "@/context/AuthContext";
-import type { User } from "firebase/auth";
+import { useAuth } from "@/context/AuthContext"; // Importar useAuth
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -47,12 +45,11 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 interface NewPostDialogProps {
-  user: User;
-  userProfile: UserProfile;
   onPostCreated: () => void;
 }
 
-export function NewPostDialog({ user, userProfile, onPostCreated }: NewPostDialogProps) {
+export function NewPostDialog({ onPostCreated }: NewPostDialogProps) {
+  const { user, userProfile } = useAuth(); // Usar el hook de autenticación
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -70,6 +67,11 @@ export function NewPostDialog({ user, userProfile, onPostCreated }: NewPostDialo
   const imageRef = form.register("image");
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
+    if (!user || !userProfile) {
+      toast({ variant: "destructive", title: "Error", description: "Debes iniciar sesión para crear una publicación." });
+      return;
+    }
+
     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
     const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
