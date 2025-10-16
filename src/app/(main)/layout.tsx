@@ -60,7 +60,7 @@ const menuItems = [
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, userProfile, loading } = useAuth();
+  const { user, userProfile, loading, isBirthdayToday } = useAuth();
 
   React.useEffect(() => {
     if (!loading && !user) {
@@ -111,10 +111,12 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
           <SidebarMenu>
             {filteredMenuItems.map((item) => {
               const isActive = pathname.startsWith(item.href);
+              const isBirthdayLink = item.label === "Cumpleaños";
+              const birthdayClass = isBirthdayToday && isBirthdayLink ? "text-yellow-400 hover:bg-yellow-400 hover:text-gray-900" : "";
               return (
                 <SidebarMenuItem key={item.label}>
                   <Link href={item.href}>
-                    <SidebarMenuButton asChild isActive={isActive} tooltip={{ children: item.label }} className={cn(isActive && "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90")}>
+                    <SidebarMenuButton asChild isActive={isActive} tooltip={{ children: item.label }} className={cn(isActive && "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90", birthdayClass)}>
                       <span>
                         <item.icon />
                         <span>{item.label}</span>

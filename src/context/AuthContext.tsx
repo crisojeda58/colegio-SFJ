@@ -3,7 +3,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { onAuthStateChanged, type User } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs, Timestamp } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 
@@ -22,6 +22,7 @@ export interface AuthContextType {
   user: User | null;
   userProfile: UserProfile | null;
   loading: boolean;
+  isBirthdayToday: boolean; 
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,6 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isBirthdayToday, setIsBirthdayToday] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -42,24 +44,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const data = userDocSnap.data();
           setUserProfile({ uid: user.uid, name: data.name, email: data.email, role: data.role, avatarUrl: data.avatarUrl, department: data.department, jobTitle: data.jobTitle, phone: data.phone });
         } else {
-            // Handle case where user exists in Auth but not in Firestore
             setUserProfile(null);
         }
+
+        try {
+            const usersCollection = collection(db, "users");
+            const querySnapshot = await getDocs(usersCollection);
+            const today = new Date();
+            const currentMonth = today.getMonth();
+            const currentDay = today.getDate();
+            
+            let birthdayFound = false;
+            for (const userDoc of querySnapshot.docs) {
+                const userData = userDoc.data();
+                if (userData.birthdate && userData.birthdate instanceof Timestamp) {
+                    const birthdate = userData.birthdate.toDate();
+                    if (birthdate.getMonth() === currentMonth && birthdate.getDate() === currentDay) {
+                        birthdayFound = true;
+                        break; 
+                    }
+                }
+            }
+            setIsBirthdayToday(birthdayFound);
+        } catch (error) {
+            console.error("Error checking for birthdays:", error);
+            setIsBirthdayToday(false);
+        }
+
         setLoading(false);
       } else {
         setUser(null);
         setUserProfile(null);
+        setIsBirthdayToday(false); 
         setLoading(false);
-        // Optional: Redirect to login if not on a public page
-        // To prevent redirection loops, you might want to check the current path
-        // router.push('/login');
       }
     });
 
     return () => unsubscribe();
   }, [router]);
 
-  const value = { user, userProfile, loading };
+  const value = { user, userProfile, loading, isBirthdayToday };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
