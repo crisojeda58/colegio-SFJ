@@ -46,7 +46,8 @@ interface Event {
   eventDate: Date;
 }
 
-const ALLOWED_ROLES = ['Jefe de departamento', 'Admin Intranet'];
+//distincion de usuarios
+const ALLOWED_ROLES = ['Admin Intranet'];
 
 export default function NewsAndCalendarPage() {
   const { user, userProfile } = useAuth();
@@ -191,7 +192,7 @@ export default function NewsAndCalendarPage() {
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8">
       <div className="bg-primary text-primary-foreground text-center p-4 rounded-lg mb-6 pb-8 pt-8">
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold">Bienvenidos a la Intranet de Educadores</h2>
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold">Bienvenidos al portal de Educadores</h2>
       </div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-card">Avisos y Eventos</h1>
@@ -246,7 +247,7 @@ export default function NewsAndCalendarPage() {
                           <div className="mt-1">
                               <Newspaper className="h-5 w-5 text-primary" />
                           </div>
-                          <div>
+                          <div> 
                               <p className="font-semibold group-hover:underline">{event.title}</p>
                               <div className="flex items-center text-sm text-muted-foreground mt-1">
                                   <Clock className="h-4 w-4 mr-1.5" />

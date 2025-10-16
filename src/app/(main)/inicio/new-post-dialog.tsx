@@ -140,9 +140,7 @@ export function NewPostDialog({ user, userProfile, onPostCreated }: NewPostDialo
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Crear Nueva Noticia/Evento</DialogTitle>
-        </DialogHeader>
+        <DialogTitle>Crear Nueva Noticia/Evento</DialogTitle>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-1">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

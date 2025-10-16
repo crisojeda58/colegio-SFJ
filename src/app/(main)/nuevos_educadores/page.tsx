@@ -83,71 +83,75 @@ export default function ColleaguesPage() {
         />
       </div>
       <Card className="bg-indigo-100">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="text-foreground font-bold">Nombre</TableHead>
-              <TableHead className="text-foreground font-bold">Departamento</TableHead>
-              <TableHead className="text-foreground font-bold">Teléfono</TableHead>
-              <TableHead className="text-foreground font-bold">Email</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              Array.from({ length: 3 }).map((_, index) => (
-                <TableRow key={index}>
-                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                  <TableCell><Skeleton className="h-6 w-28 rounded-full" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-48" /></TableCell>
-                </TableRow>
-              ))
-            ) : (
-              filteredEmployees.map((employee) => (
-                <TableRow key={employee.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-9 w-9">
-                        <AvatarImage src={employee.avatarUrl || `https://avatar.vercel.sh/${employee.name}.png`} alt={employee.name} />
-                        <AvatarFallback>{employee.name.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <span className="font-medium">{employee.name}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className="font-medium">{employee.department}</span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="font-medium">{employee.jobTitle}</span>
-                  </TableCell>
-                  <TableCell>
-                    {employee.phone ? (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Phone className="h-4 w-4" />
-                            {employee.phone}
-                        </div>
-                    ) : (
-                        <span className="text-xs text-muted-foreground">No disponible</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <a href={`mailto:${employee.email}`} className="flex items-center gap-2 text-sm hover:underline text-muted-foreground hover:text-primary">
-                        <Mail className="h-4 w-4" />
-                        {employee.email}
-                    </a>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-            {!loading && filteredEmployees.length === 0 && (
-                <TableRow>
-                    <TableCell colSpan={4} className="h-24 text-center">
-                        No hay colegas nuevos este año.
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-foreground font-bold">Nombre</TableHead>
+                <TableHead className="text-foreground font-bold">Departamento</TableHead>
+                <TableHead className="text-foreground font-bold">Cargo</TableHead>
+                <TableHead className="text-foreground font-bold">Teléfono</TableHead>
+                <TableHead className="text-foreground font-bold">Email</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                Array.from({ length: 3 }).map((_, index) => (
+                  <TableRow key={index}>
+                    <TableCell><Skeleton className="h-10 w-40" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-28" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                filteredEmployees.map((employee) => (
+                  <TableRow key={employee.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-9 w-9">
+                          <AvatarImage src={employee.avatarUrl || `https://avatar.vercel.sh/${employee.name}.png`} alt={employee.name} />
+                          <AvatarFallback>{employee.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <span className="font-medium whitespace-nowrap">{employee.name}</span>
+                      </div>
                     </TableCell>
-                </TableRow>
-            )}
-          </TableBody>
-        </Table>
+                    <TableCell>
+                      <span className="font-medium whitespace-nowrap">{employee.department}</span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-medium whitespace-nowrap">{employee.jobTitle}</span>
+                    </TableCell>
+                    <TableCell>
+                      {employee.phone ? (
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground whitespace-nowrap">
+                              <Phone className="h-4 w-4" />
+                              {employee.phone}
+                          </div>
+                      ) : (
+                          <span className="text-xs text-muted-foreground">No disponible</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <a href={`mailto:${employee.email}`} className="flex items-center gap-2 text-sm hover:underline text-muted-foreground hover:text-primary whitespace-nowrap">
+                          <Mail className="h-4 w-4" />
+                          {employee.email}
+                      </a>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+              {!loading && filteredEmployees.length === 0 && (
+                  <TableRow>
+                      <TableCell colSpan={5} className="h-24 text-center">
+                          No hay colegas nuevos este año.
+                      </TableCell>
+                  </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </Card>
     </div>
   );

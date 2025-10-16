@@ -104,6 +104,9 @@ export function PostDetailDialog({ newsItemId, children, onPostDeleted }: PostDe
       <DialogContent className="max-w-md sm:max-w-lg md:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-y-auto p-0">
         {loading || !newsItem ? (
            <div className="p-6 md:p-8">
+                <DialogHeader>
+                  <DialogTitle className="sr-only">Cargando...</DialogTitle>
+                </DialogHeader>
                 <Skeleton className="w-full h-64 sm:h-80 rounded-lg mb-6" />
                 <Skeleton className="h-8 w-3/4 mb-4" />
                 <div className="flex items-center gap-4 mb-6">

@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
-import { db, auth } from "@/lib/firebase";
+import { db } from "@/lib/firebase";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { onAuthStateChanged, type User } from "firebase/auth";
+import { useAuth, type UserProfile } from "@/context/AuthContext";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -52,10 +52,6 @@ const formSchema = z.object({
 });
 
 type FormValues = z.infer<typeof formSchema>;
-
-interface UserProfile {
-  role: string;
-}
 
 const initialMenuData: FormValues = {
   normal: {
@@ -228,26 +224,13 @@ export default function KitchenPage() {
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const { userProfile } = useAuth();
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: initialMenuData,
   });
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const userDocRef = doc(db, "users", user.uid);
-        const userDocSnap = await getDoc(userDocRef);
-        if (userDocSnap.exists()) {
-            setUserProfile(userDocSnap.data() as UserProfile);
-        }
-      }
-    });
-    return () => unsubscribe();
-  }, []);
 
   useEffect(() => {
     const fetchMenu = async () => {
