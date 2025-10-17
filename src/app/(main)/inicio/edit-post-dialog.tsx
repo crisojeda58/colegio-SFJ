@@ -8,6 +8,7 @@ import { z } from "zod";
 import { doc, getDoc, updateDoc, serverTimestamp, Timestamp } from "firebase/firestore";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import Image from "next/image";
 
 import { db } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
@@ -168,7 +169,32 @@ export function EditPostDialog({ newsItemId, onPostEdited, children }: EditPostD
                 </div>
                 <FormField control={form.control} name="excerpt" render={({ field }) => (<FormItem><FormLabel>Resumen</FormLabel><FormControl><Textarea className="min-h-[100px]" {...field} /></FormControl><FormMessage /></FormItem>)} />
                 <FormField control={form.control} name="content" render={({ field }) => (<FormItem><FormLabel>Contenido Completo</FormLabel><FormControl><Textarea className="min-h-[250px]" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                <FormField control={form.control} name="image" render={() => (<FormItem><FormLabel>Imagen de Portada</FormLabel><FormControl><Input type="file" {...imageRef} /></FormControl><FormDescription>Sube una imagen para reemplazar la actual. Si no, se mantendrá la existente.</FormDescription><FormMessage /></FormItem>)} />
+                <FormField 
+                  control={form.control} 
+                  name="image" 
+                  render={() => (
+                    <FormItem>
+                      <FormLabel>Imagen de Portada</FormLabel>
+                      {initialImageUrl && (
+                        <div className="mt-2">
+                          <p className="text-sm font-medium text-muted-foreground mb-2">Imagen actual:</p>
+                          <Image
+                            src={initialImageUrl}
+                            alt="Imagen actual"
+                            width={100}
+                            height={100}
+                            className="rounded-md object-cover"
+                          />
+                        </div>
+                      )}
+                      <FormControl>
+                        <Input type="file" {...imageRef} className="mt-4" />
+                      </FormControl>
+                      <FormDescription>Sube una imagen para reemplazar la actual. Si no, se mantendrá la existente.</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )} 
+                />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField control={form.control} name="eventDate" render={({ field }) => (<FormItem className="flex flex-col"><FormLabel>Fecha del Evento</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant={"outline"} className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>{field.value ? format(field.value, "PPP", { locale: es }) : <span>Selecciona fecha</span>}<CalendarIcon className="ml-auto h-4 w-4 opacity-50" /></Button></FormControl></PopoverTrigger><PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus /></PopoverContent></Popover><FormMessage /></FormItem>)} />
                     <FormField control={form.control} name="eventTime" render={({ field }) => (<FormItem><FormLabel>Hora del Evento</FormLabel><FormControl><Input type="time" {...field} /></FormControl><FormMessage /></FormItem>)} />
