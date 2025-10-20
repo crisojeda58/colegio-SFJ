@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { ArrowUpRight, Book, Landmark, Microscope, Globe, Trash2, Loader2 } from "lucide-react";
+import { ArrowUpRight, Book, Landmark, Microscope, Globe, Trash2, Loader2, GraduationCap, Briefcase, HeartPulse, FileText } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
@@ -30,6 +30,10 @@ const iconMap: { [key: string]: LucideIcon } = {
   Landmark,
   Microscope,
   Globe,
+  GraduationCap,
+  Briefcase,
+  HeartPulse,
+  FileText,
 };
 
 export default function SitiosDeInteresPage() {
@@ -98,7 +102,7 @@ export default function SitiosDeInteresPage() {
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Estás absolutamente seguro?</AlertDialogTitle>
+            <AlertDialogTitle>¿Estás absolutely seguro?</AlertDialogTitle>
             <AlertDialogDescription>
               Esta acción no se puede deshacer. Esto eliminará permanentemente el sitio de interés.
             </AlertDialogDescription>

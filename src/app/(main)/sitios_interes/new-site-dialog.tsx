@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { useState } from "react";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { useState } from 'react';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -16,34 +16,55 @@ import {
   DialogTrigger,
   DialogFooter,
   DialogClose,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { LoaderCircle, Plus } from "lucide-react";
+} from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import {
+  LoaderCircle,
+  Plus,
+  Globe,
+  Book,
+  Landmark,
+  Microscope,
+  GraduationCap,
+  Briefcase,
+  HeartPulse,
+  FileText,
+} from 'lucide-react';
+
+const iconOptions = [
+  { value: 'Globe', label: 'Globo', icon: Globe },
+  { value: 'Book', label: 'Libro', icon: Book },
+  { value: 'Landmark', label: 'Edificio', icon: Landmark },
+  { value: 'Microscope', label: 'Microscopio', icon: Microscope },
+  { value: 'GraduationCap', label: 'Gorro de Graduación', icon: GraduationCap },
+  { value: 'Briefcase', label: 'Maletín', icon: Briefcase },
+  { value: 'HeartPulse', label: 'Salud', icon: HeartPulse },
+  { value: 'FileText', label: 'Documento', icon: FileText },
+];
 
 const formSchema = z.object({
-  title: z.string().min(1, "El título es requerido"),
-  description: z.string().min(1, "La descripción es requerida"),
-  href: z.string().url("Debe ser una URL válida"),
-  icon: z.string().min(1, "El ícono es requerido"),
-  category: z.string().min(1, "La categoría es requerida"),
+  title: z.string().min(1, 'El título es requerido'),
+  description: z.string().min(1, 'La descripción es requerida'),
+  href: z.string().url('Debe ser una URL válida'),
+  icon: z.string().min(1, 'El ícono es requerido'),
+  category: z.string().min(1, 'La categoría es requerida'),
 });
 
 interface NewSiteDialogProps {
@@ -57,27 +78,27 @@ export function NewSiteDialog({ onSiteCreated }: NewSiteDialogProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: "",
-      description: "",
-      href: "",
-      icon: "Globe",
-      category: "General",
+      title: '',
+      description: '',
+      href: '',
+      icon: 'Globe',
+      category: 'General',
     },
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      await addDoc(collection(db, "sites"), {
+      await addDoc(collection(db, 'sites'), {
         ...values,
         createdAt: serverTimestamp(),
       });
-      toast({ title: "Éxito", description: "Sitio de interés creado correctamente." });
+      toast({ title: 'Éxito', description: 'Sitio de interés creado correctamente.' });
       form.reset();
       setIsOpen(false);
       onSiteCreated();
     } catch (error) {
-      console.error("Error creating site: ", error);
-      toast({ variant: "destructive", title: "Error", description: "No se pudo crear el sitio de interés." });
+      console.error('Error creating site: ', error);
+      toast({ variant: 'destructive', title: 'Error', description: 'No se pudo crear el sitio de interés.' });
     }
   };
 
@@ -138,51 +159,57 @@ export function NewSiteDialog({ onSiteCreated }: NewSiteDialogProps) {
               )}
             />
             <FormField
-                control={form.control}
-                name="icon"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Ícono</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Selecciona un ícono" />
-                        </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                            <SelectItem value="Globe">Globo</SelectItem>
-                            <SelectItem value="Book">Libro</SelectItem>
-                            <SelectItem value="Landmark">Edificio</SelectItem>
-                            <SelectItem value="Microscope">Microscopio</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <FormMessage />
-                    </FormItem>
-                )}
+              control={form.control}
+              name="icon"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Ícono</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona un ícono" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {iconOptions.map((option) => {
+                        const Icon = option.icon;
+                        return (
+                          <SelectItem key={option.value} value={option.value}>
+                            <div className="flex items-center">
+                              <Icon className="mr-2 h-4 w-4" />
+                              <span>{option.label}</span>
+                            </div>
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-             <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Categoría</FormLabel>
-                     <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Selecciona una categoría" />
-                        </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                            <SelectItem value="General">General</SelectItem>
-                            <SelectItem value="Academico">Académico</SelectItem>
-                            <SelectItem value="Recursos">Recursos</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <FormMessage />
-                    </FormItem>
-                )}
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Categoría</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona una categoría" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="General">General</SelectItem>
+                      <SelectItem value="Academico">Académico</SelectItem>
+                      <SelectItem value="Recursos">Recursos</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-
             <DialogFooter>
               <DialogClose asChild>
                 <Button type="button" variant="outline">
