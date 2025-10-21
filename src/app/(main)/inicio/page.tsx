@@ -212,6 +212,7 @@ export default function NewsAndCalendarPage() {
                 onSelect={setDate}
                 className="p-3"
                 locale={es}
+                formatters={{ formatCaption: (date, options) => format(date, 'MMMM yyyy', { locale: options?.locale }), formatWeekdayName: (day, options) => format(day, 'EEEEEE', { locale: options?.locale }).slice(0, 2) }}
                 modifiers={{ event: eventDays }}
                 modifiersStyles={{ 
                   event: { 
