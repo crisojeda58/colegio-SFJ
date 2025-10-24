@@ -19,6 +19,7 @@ import {
   Contact,
   GraduationCap,
   Utensils,
+  CalendarPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -47,6 +48,7 @@ import { AuthProvider, useAuth } from "@/context/AuthContext";
 const menuItems = [
     { href: "/inicio", label: "Inicio", icon: Newspaper },
     { href: "/documentos", label: "Documentos", icon: FileText },
+    { href: "/solicitudes_espacio", label: "Solicitudes de Espacio", icon: CalendarPlus },
     { href: "/sitios_interes", label: "Sitios de Interés", icon: Link2 },
     { href: "/nuevos_educadores", label: "Nuevos Educadores", icon: UserPlus },
     { href: "/contactos", label: "Contactos", icon: Contact },
