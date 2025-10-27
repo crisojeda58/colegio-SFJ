@@ -57,24 +57,39 @@ export default function SolicitudesEspacio() {
 
     const name = userProfile?.name || "No especificado";
     const email = userProfile?.email || "No especificado";
+    const toName = "Cristian";
+    const toName2 = "Carolina";
 
-    const to = "cristian.ojeda@colsanjavier.cl";
+    let to = "cristian.ojeda@colsanjavier.cl";
+    const to2 = "carolina.farias@colsanjavier.cl";
+    let toGreeting = `Estimado ${toName}`;
+
+    if (selectedMaterials.includes("Computador")) {
+      to = `${to},${to2}`;
+      toGreeting = `Estimados ${toName} y ${toName2}`;
+    }
+
     const subject = "Solicitud de Espacio/Materiales";
     const body = `
-      Solicitante: ${name}
-      Email: ${email}
+      ${toGreeting},
+      Junto con saludar, ${name} ha solicitado lo siguiente:
       
-      Espacio Solicitado: ${space}
-      Materiales Requeridos: ${selectedMaterials.join(", ") || "Ninguno"}
+      - Espacio Solicitado: ${space}
+      - Materiales Requeridos: ${selectedMaterials.join(", ") || "Ninguno"}
+      - Fecha: ${date}
+      - Hora: ${time}
+
+      Datos del solicitante:
+      - Email: ${email}
       
-      Fecha: ${date}
-      Hora: ${time}
+      Saludos cordiales.
     `;
 
-    const mailtoLink = `mailto:${to}?subject=${encodeURIComponent(
+    const gmailComposeUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${to}&su=${encodeURIComponent(
       subject
     )}&body=${encodeURIComponent(body)}`;
-    window.location.href = mailtoLink;
+
+    window.open(gmailComposeUrl, "_blank");
   };
 
   return (
