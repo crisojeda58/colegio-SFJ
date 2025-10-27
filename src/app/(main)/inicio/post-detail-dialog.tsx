@@ -32,9 +32,10 @@ interface PostDetailDialogProps {
   newsItemId: string;
   children: React.ReactNode;
   onPostDeleted: () => void;
+  onPostEdited: () => void;
 }
 
-export function PostDetailDialog({ newsItemId, children, onPostDeleted }: PostDetailDialogProps) {
+export function PostDetailDialog({ newsItemId, children, onPostDeleted, onPostEdited }: PostDetailDialogProps) {
   const { userProfile } = useAuth();
   const { toast } = useToast();
   
@@ -75,8 +76,9 @@ export function PostDetailDialog({ newsItemId, children, onPostDeleted }: PostDe
     }
   }, [isOpen, fetchNewsItem]);
 
-  const handlePostEdited = () => {
-    fetchNewsItem();
+  const handlePostEditedAndRefresh = () => {
+    fetchNewsItem(); // Refreshes the detail dialog
+    onPostEdited(); // Refreshes the main page list
   };
 
   const handleDelete = async () => {
@@ -131,7 +133,7 @@ export function PostDetailDialog({ newsItemId, children, onPostDeleted }: PostDe
                     </DialogTitle>
                     {canManage && (
                         <div className="flex gap-2 flex-shrink-0">
-                            <EditPostDialog newsItemId={newsItem.id} onPostEdited={handlePostEdited}>
+                            <EditPostDialog newsItemId={newsItem.id} onPostEdited={handlePostEditedAndRefresh}>
                                 <Button variant="outline" size="sm">
                                     <Pencil className="mr-2 h-4 w-4" />
                                     Editar

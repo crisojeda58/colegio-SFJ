@@ -21,12 +21,22 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/context/AuthContext";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const materialsList = [
   { id: "pizarra", label: "Pizarra" },
   { id: "computador", label: "Computador" },
   { id: "proyector", label: "Proyector" },
   { id: "microfono", label: "Micrófono" },
+  { id: "wifi", label: "Wifi" },
 ];
 
 export default function SolicitudesEspacio() {
@@ -35,6 +45,7 @@ export default function SolicitudesEspacio() {
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleMaterialChange = (materialId: string, checked: boolean | "indeterminate") => {
     setSelectedMaterials((prev) => {
@@ -57,14 +68,17 @@ export default function SolicitudesEspacio() {
 
     const name = userProfile?.name || "No especificado";
     const email = userProfile?.email || "No especificado";
-    const toName = "Cristian";
+    const toName = "Lucia";
     const toName2 = "Carolina";
 
-    let to = "cristian.ojeda@colsanjavier.cl";
-    const to2 = "carolina.farias@colsanjavier.cl";
-    let toGreeting = `Estimado ${toName}`;
+    let to = "lucia.gonzalez@colsanjavier.cl";
+    const to2 = "deptoinformatica@colsanjavier.cl";
+    let toGreeting = `Estimada ${toName}`;
 
-    if (selectedMaterials.includes("Computador")) {
+    if (
+      selectedMaterials.includes("Computador") ||
+      selectedMaterials.includes("Wifi")
+    ) {
       to = `${to},${to2}`;
       toGreeting = `Estimados ${toName} y ${toName2}`;
     }
@@ -72,6 +86,7 @@ export default function SolicitudesEspacio() {
     const subject = "Solicitud de Espacio/Materiales";
     const body = `
       ${toGreeting},
+
       Junto con saludar, ${name} ha solicitado lo siguiente:
       
       - Espacio Solicitado: ${space}
@@ -90,6 +105,7 @@ export default function SolicitudesEspacio() {
     )}&body=${encodeURIComponent(body)}`;
 
     window.open(gmailComposeUrl, "_blank");
+    setIsDialogOpen(true);
   };
 
   return (
@@ -110,10 +126,15 @@ export default function SolicitudesEspacio() {
                   <SelectValue placeholder="Seleccione un espacio" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Salón de Actos">Salón de Actos</SelectItem>
-                  <SelectItem value="Sala de Reuniones">Sala de Reuniones</SelectItem>
-                  <SelectItem value="Gimnasio">Gimnasio</SelectItem>
-                  <SelectItem value="Patio Techado">Patio Techado</SelectItem>
+                  <SelectItem value="Auditorio">Auditorio</SelectItem>
+                  <SelectItem value="Sala Combes">Sala Combes</SelectItem>
+                  <SelectItem value="Sala Nobeles">Sala Nobeles</SelectItem>
+                  <SelectItem value="Sala Manitos">Sala Manitos</SelectItem>
+                  <SelectItem value="Sala Proyectos 1">Sala Proyectos 1</SelectItem>
+                  <SelectItem value="Sala Proyectos 2">Sala Proyectos 2</SelectItem>
+                  <SelectItem value="Sala Proyectos 3">Sala Proyectos 3</SelectItem>
+                  <SelectItem value="Gimnasio 1">Gimnasio 1</SelectItem>
+                  <SelectItem value="Gimnasio 2">Gimnasio 2</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -161,6 +182,20 @@ export default function SolicitudesEspacio() {
           </CardFooter>
         </form>
       </Card>
+
+      <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Correo Generado Exitosamente</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se ha abierto una nueva pestaña para que puedas revisar y enviar el correo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setIsDialogOpen(false)}>Cerrar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

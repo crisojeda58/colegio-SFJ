@@ -91,16 +91,36 @@ export default function NewsAndCalendarPage() {
   }, [fetchNews]);
 
   const sortedNewsItems = React.useMemo(() => {
-    const futureItems = newsItems
-      .filter(item => item.eventDate && isFuture(item.eventDate))
-      .sort((a, b) => compareAsc(a.eventDate!, b.eventDate!));
-
     const pastItems = newsItems
-      .filter(item => !item.eventDate || isPast(item.eventDate))
-      .sort((a, b) => (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0));
+      .filter(item => (item.eventDate ? isPast(item.eventDate) : true))
+      .sort((a, b) => {
+        const dateA = a.eventDate || a.publishedAt;
+        const dateB = b.eventDate || b.publishedAt;
+        if (!dateA) return 1;
+        if (!dateB) return -1;
+        return dateB.getTime() - dateA.getTime(); // Most recent past first
+      });
 
-    return [...futureItems, ...pastItems];
+    const futureItems = newsItems
+      .filter(item => (item.eventDate ? isFuture(item.eventDate) : false))
+      .sort((a, b) => compareAsc(a.eventDate!, b.eventDate!)); // Nearest future first
+
+    return [...pastItems, ...futureItems];
   }, [newsItems]);
+
+  const canCreateNews = userProfile && ALLOWED_ROLES.includes(userProfile.role);
+
+  const newsVisibleToUser = React.useMemo(() => {
+    if (canCreateNews) {
+      return sortedNewsItems;
+    }
+    return sortedNewsItems.filter(item => {
+      if (item.eventDate) {
+        return isFuture(item.eventDate);
+      }
+      return true; // Always show non-event posts
+    });
+  }, [sortedNewsItems, canCreateNews]);
 
   const events = newsItems
     .filter(item => item.category === 'Evento' && item.eventDate)
@@ -113,13 +133,11 @@ export default function NewsAndCalendarPage() {
 
   const eventDays = events.map(event => event.eventDate);
 
-  const canCreateNews = userProfile && ALLOWED_ROLES.includes(userProfile.role);
-
   const handleLoadMore = () => {
     setVisibleNewsCount(prevCount => prevCount + NEWS_PER_PAGE);
   };
 
-  const currentlyVisibleNews = sortedNewsItems.slice(0, visibleNewsCount);
+  const currentlyVisibleNews = newsVisibleToUser.slice(0, visibleNewsCount);
 
   const renderNewsList = (items: NewsItem[]) => {
     if (loading && items.length === 0) {
@@ -153,9 +171,12 @@ export default function NewsAndCalendarPage() {
                     : (item.publishedAt ? format(item.publishedAt, "dd 'de' MMMM, yyyy", { locale: es }) : "Fecha no especificada");
 
                 return (
-                    <PostDetailDialog key={item.id} newsItemId={item.id} onPostDeleted={fetchNews}>
+                    <PostDetailDialog key={item.id} newsItemId={item.id} onPostDeleted={fetchNews} onPostEdited={fetchNews}>
                         <div className="block transform transition-transform duration-200 hover:scale-[1.02] cursor-pointer h-full">
-                            <Card className="flex flex-col overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full">
+                            <Card className={cn(
+                                "flex flex-col overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full",
+                                canCreateNews && hasEventDatePassed && "bg-red-400"
+                            )}>
                                 <div className="relative w-full h-48">
                                     <Image 
                                         src={item.imageUrl} 
@@ -173,7 +194,7 @@ export default function NewsAndCalendarPage() {
                                             {displayDate}
                                         </span>
                                     </div>
-                                    <CardTitle className={cn(hasEventDatePassed && "text-destructive")}>
+                                    <CardTitle>
                                         {item.title}
                                     </CardTitle>
                                 </CardHeader>
@@ -242,7 +263,7 @@ export default function NewsAndCalendarPage() {
               ) : selectedDayEvents.length > 0 ? (
                 <div className="space-y-4">
                   {selectedDayEvents.map((event) => (
-                    <PostDetailDialog key={event.id} newsItemId={event.id} onPostDeleted={fetchNews}>
+                    <PostDetailDialog key={event.id} newsItemId={event.id} onPostDeleted={fetchNews} onPostEdited={fetchNews}>
                       <div className="block group cursor-pointer">
                         <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted transition-colors">
                           <div className="mt-1">
@@ -291,7 +312,7 @@ export default function NewsAndCalendarPage() {
 
       <div className="mt-6">
         {renderNewsList(currentlyVisibleNews)}
-        {visibleNewsCount < sortedNewsItems.length && (
+        {visibleNewsCount < newsVisibleToUser.length && (
             <div className="flex justify-center mt-8">
                 <Button onClick={handleLoadMore} variant="secondary">
                     Cargar más publicaciones
