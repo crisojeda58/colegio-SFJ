@@ -134,7 +134,7 @@ export function PostDetailDialog({ newsItemId, children, onPostDeleted, onPostEd
                     {canManage && (
                         <div className="flex gap-2 flex-shrink-0">
                             <EditPostDialog newsItemId={newsItem.id} onPostEdited={handlePostEditedAndRefresh}>
-                                <Button variant="outline" size="sm">
+                                <Button className="bg-primary" size="sm">
                                     <Pencil className="mr-2 h-4 w-4" />
                                     Editar
                                 </Button>

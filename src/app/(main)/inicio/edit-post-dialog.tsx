@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, ChangeEvent, DragEvent } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -15,10 +15,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar as CalendarIcon, LoaderCircle } from "lucide-react";
+import { Calendar as CalendarIcon, LoaderCircle, Upload, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
@@ -53,6 +53,8 @@ export function EditPostDialog({ newsItemId, onPostEdited, children }: EditPostD
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(false);
   const [initialImageUrl, setInitialImageUrl] = useState("");
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -76,6 +78,7 @@ export function EditPostDialog({ newsItemId, onPostEdited, children }: EditPostD
           eventTime: data.eventDate ? format(eventDate, 'HH:mm') : '12:00',
         });
         setInitialImageUrl(data.imageUrl);
+        setImagePreview(data.imageUrl); // Set initial preview
       } else {
         toast({ variant: "destructive", title: "Error", description: "No se encontró la noticia." });
         setIsOpen(false);
@@ -87,6 +90,49 @@ export function EditPostDialog({ newsItemId, onPostEdited, children }: EditPostD
       fetchNewsData();
     }
   }, [isOpen, newsItemId, form, toast]);
+
+  const processFile = (file: File) => {
+    const validation = z
+      .object({
+        size: z.number().max(MAX_FILE_SIZE, `El tamaño máximo es 5MB.`),
+        type: z.string().refine((type) => ACCEPTED_IMAGE_TYPES.includes(type), "Solo se aceptan .jpg, .jpeg, .png y .webp."),
+      })
+      .safeParse(file);
+
+    if (!validation.success) {
+      form.setError("image", { type: "manual", message: validation.error.errors[0].message });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    form.setValue("image", [file] as any, { shouldValidate: true });
+  };
+
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processFile(file);
+    }
+  };
+
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      processFile(file);
+    }
+  };
+
+  const removeImage = () => {
+    setImagePreview(null);
+    form.setValue("image", null, { shouldValidate: true });
+  };
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
@@ -144,10 +190,17 @@ export function EditPostDialog({ newsItemId, onPostEdited, children }: EditPostD
     }
   };
 
-  const imageRef = form.register("image");
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+        form.reset();
+        setImagePreview(null);
+        setInitialImageUrl("");
+    }
+    setIsOpen(open);
+  };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -169,31 +222,40 @@ export function EditPostDialog({ newsItemId, onPostEdited, children }: EditPostD
                 </div>
                 <FormField control={form.control} name="excerpt" render={({ field }) => (<FormItem><FormLabel>Resumen</FormLabel><FormControl><Textarea className="min-h-[100px]" {...field} /></FormControl><FormMessage /></FormItem>)} />
                 <FormField control={form.control} name="content" render={({ field }) => (<FormItem><FormLabel>Contenido Completo</FormLabel><FormControl><Textarea className="min-h-[250px]" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                <FormField 
-                  control={form.control} 
-                  name="image" 
+                <FormField
+                  control={form.control}
+                  name="image"
                   render={() => (
                     <FormItem>
                       <FormLabel>Imagen de Portada</FormLabel>
-                      {initialImageUrl && (
-                        <div className="mt-2">
-                          <p className="text-sm font-medium text-muted-foreground mb-2">Imagen actual:</p>
-                          <Image
-                            src={initialImageUrl}
-                            alt="Imagen actual"
-                            width={100}
-                            height={100}
-                            className="rounded-md object-cover"
-                          />
-                        </div>
-                      )}
                       <FormControl>
-                        <Input type="file" {...imageRef} className="mt-4" />
+                      <div
+                        onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
+                        onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); }}
+                        onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                        onDrop={handleDrop}
+                      >
+                        {imagePreview ? (
+                          <div className="relative w-full max-w-sm mx-auto">
+                            <Image src={imagePreview} alt="Previsualización" width={400} height={225} className="rounded-lg object-cover w-full h-auto" />
+                            <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2 rounded-full h-7 w-7" onClick={removeImage}>
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <label htmlFor="file-upload-edit" className={cn("flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition", { "border-blue-500 bg-blue-50": isDragging }, "border-gray-300")}>
+                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                              <Upload className="w-10 h-10 mb-3 text-gray-400" />
+                              <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">Haz clic para subir</span> o arrastra y suelta</p>
+                              <p className="text-xs text-gray-500">JPG, PNG, WEBP (MAX. 5MB)</p>
+                            </div>
+                            <Input id="file-upload-edit" type="file" className="hidden" onChange={handleImageChange} accept={ACCEPTED_IMAGE_TYPES.join(',')} />
+                          </label>
+                        )}\n                        </div>
                       </FormControl>
-                      <FormDescription>Sube una imagen para reemplazar la actual. Si no, se mantendrá la existente.</FormDescription>
-                      <FormMessage />
+                      <FormMessage className="mt-2" />
                     </FormItem>
-                  )} 
+                  )}
                 />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField control={form.control} name="eventDate" render={({ field }) => (<FormItem className="flex flex-col"><FormLabel>Fecha del Evento</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant={"outline"} className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>{field.value ? format(field.value, "PPP", { locale: es }) : <span>Selecciona fecha</span>}<CalendarIcon className="ml-auto h-4 w-4 opacity-50" /></Button></FormControl></PopoverTrigger><PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus /></PopoverContent></Popover><FormMessage /></FormItem>)} />
