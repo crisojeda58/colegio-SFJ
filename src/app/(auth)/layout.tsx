@@ -6,7 +6,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="min-h-screen relative flex items-center justify-center p-4">
       <Image
-        src="https://res.cloudinary.com/duys6asgx/image/upload/v1758821648/campanario_zd6suo.webp"
+        src="https://jjcoikehfpzwmjliqktc.supabase.co/storage/v1/object/public/intranet_img/campanario_zd6suo.webp"
         alt="Fondo del campanario del colegio"
         fill
         style={{ objectFit: 'cover' }}

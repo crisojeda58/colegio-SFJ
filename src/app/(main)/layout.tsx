@@ -102,7 +102,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
         <SidebarHeader className="p-4">
             <Link href="/noticias" className="flex items-center gap-2 text-primary-foreground group-data-[collapsible=icon]:justify-center">
                 <div className="p-1">
-                <Image src="https://res.cloudinary.com/duys6asgx/image/upload/v1759331112/Logo_insignia_a_color_smffkw.png" alt="Logo en sidebar" width={35} height={24} className="object-contain"/>
+                <Image src="https://jjcoikehfpzwmjliqktc.supabase.co/storage/v1/object/public/intranet_img/Logo_insignia_a_color_smffkw.png" alt="Logo en sidebar" width={35} height={24} className="object-contain"/>
                 </div>
                 <div className="text-lg font-bold tracking-tight group-data-[collapsible=icon]:hidden">
                 Colegio San Francisco Javier
@@ -112,7 +112,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
         <SidebarContent>
           <SidebarMenu>
             {filteredMenuItems.map((item) => {
-              const isActive = pathname.startsWith(item.href);
+              const isActive = pathname?.startsWith(item.href);
               const isBirthdayLink = item.label === "Cumpleaños";
               const birthdayClass = isBirthdayToday && isBirthdayLink ? "text-yellow-400 hover:bg-yellow-400 hover:text-gray-900" : "";
               return (
@@ -165,7 +165,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             </header>
             
             {/* Contenedor para main y footer con el fondo */}
-            <div className="flex-1 flex flex-col relative bg-cover bg-center" style={{ backgroundImage: "url('https://res.cloudinary.com/duys6asgx/image/upload/v1759150362/38709_120920_061D_f5holn.jpg')" }}>
+            <div className="flex-1 flex flex-col relative bg-cover bg-center" style={{ backgroundImage: "url('https://jjcoikehfpzwmjliqktc.supabase.co/storage/v1/object/public/intranet_img/38709_120920_061D_f5holn.jpg')" }}>
                 <div className="absolute inset-0 bg-black/50" />
                 <main className="flex-1 p-4 sm:p-6 lg:p-8 relative">
                     {children}
@@ -174,7 +174,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                     <div className="container mx-auto flex items-center justify-center gap-4 text-sm text-primary-foreground/80">
                         <span>© {new Date().getFullYear()} Colegio San Francisco Javier</span>
                         <span>|</span>
-                        <Image src="https://res.cloudinary.com/duys6asgx/image/upload/v1759331112/Logo_insignia_a_color_smffkw.png" alt="Logo en footer" width={35} height={24} className="object-contain"/>
+                        <Image src="https://jjcoikehfpzwmjliqktc.supabase.co/storage/v1/object/public/intranet_img/Logo_insignia_a_color_smffkw.png" alt="Logo en footer" width={35} height={24} className="object-contain"/>
                     </div>
                 </footer>
             </div>

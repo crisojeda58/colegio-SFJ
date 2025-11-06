@@ -1,34 +1,21 @@
+
 "use client";
 
 import * as React from "react";
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, FileText, PlusCircle, Download } from "lucide-react";
+import { ArrowLeft, FileText, PlusCircle, Download, Trash2, Edit } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { db } from "@/lib/firebase";
-import { collection, doc, getDoc, addDoc, onSnapshot, query } from "firebase/firestore";
+import { collection, doc, addDoc, onSnapshot, query, deleteDoc, updateDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
+import { FileUploader } from "@/components/ui/file-uploader";
 
-// Define the type for a file stored in Firestore
 interface StoredFile {
   id: string;
   name: string;
@@ -38,8 +25,8 @@ interface StoredFile {
 export default function FolderContentPage() {
   const router = useRouter();
   const params = useParams();
-  const folderId = params.id as string;
-  const { userProfile } = useAuth();
+  const folderId = params?.id as string;
+  const { userProfile, getAuthToken } = useAuth(); 
 
   const { toast } = useToast();
   const [folderName, setFolderName] = React.useState("Cargando...");
@@ -47,14 +34,16 @@ export default function FolderContentPage() {
   const [isUploadDialogOpen, setUploadDialogOpen] = React.useState(false);
   const [fileToUpload, setFileToUpload] = React.useState<File | null>(null);
   const [isUploading, setIsUploading] = React.useState(false);
-
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  
+  const [isEditDialogOpen, setEditDialogOpen] = React.useState(false);
+  const [editingFile, setEditingFile] = React.useState<StoredFile | null>(null);
+  const [newFileName, setNewFileName] = React.useState("");
 
   React.useEffect(() => {
     if (!folderId) return;
 
     const folderDocRef = doc(db, "docs_folders", folderId);
-    getDoc(folderDocRef).then((docSnap) => {
+    const unsubscribeFolder = onSnapshot(folderDocRef, (docSnap) => {
       if (docSnap.exists()) {
         setFolderName(docSnap.data().name);
       } else {
@@ -63,7 +52,7 @@ export default function FolderContentPage() {
     });
 
     const filesQuery = query(collection(folderDocRef, "files"));
-    const unsubscribe = onSnapshot(filesQuery, (querySnapshot) => {
+    const unsubscribeFiles = onSnapshot(filesQuery, (querySnapshot) => {
       const filesData: StoredFile[] = [];
       querySnapshot.forEach((doc) => {
         filesData.push({ id: doc.id, ...doc.data() } as StoredFile);
@@ -71,14 +60,11 @@ export default function FolderContentPage() {
       setFiles(filesData);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeFolder();
+      unsubscribeFiles();
+    };
   }, [folderId]);
-
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files.length > 0) {
-      setFileToUpload(event.target.files[0]);
-    }
-  };
 
   const handleUpload = async () => {
     if (!fileToUpload) {
@@ -86,11 +72,9 @@ export default function FolderContentPage() {
       return;
     }
 
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-
-    if (!cloudName || !uploadPreset) {
-      toast({ variant: "destructive", title: "Error de configuración de Cloudinary" });
+    const authToken = await getAuthToken();
+    if (!authToken) {
+      toast({ variant: "destructive", title: "Error de autenticación" });
       return;
     }
 
@@ -99,53 +83,128 @@ export default function FolderContentPage() {
     try {
       const formData = new FormData();
       formData.append("file", fileToUpload);
-      formData.append("upload_preset", uploadPreset);
-      formData.append("folder", `intranet_colegio/documentos/${folderName}`);
-      formData.append("resource_type", "auto"); // Let Cloudinary auto-detect the file type
 
-      // Use the generic upload endpoint
-      const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/upload`;
+      const response = await fetch("/api/documents/upload", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: formData,
+      });
 
-      const uploadResponse = await fetch(uploadUrl, { method: "POST", body: formData });
-
-      if (!uploadResponse.ok) {
-        const errorText = await uploadResponse.text();
-        console.error("Cloudinary upload failed:", errorText);
-        throw new Error("Falló la subida del archivo a Cloudinary.");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Falló la subida del archivo.");
       }
 
-      const result = await uploadResponse.json();
-      // For non-image files, the URL for download needs the fl_attachment flag.
-      let secure_url = result.secure_url;
-      if (result.resource_type === 'raw') {
-        const urlParts = secure_url.split('/upload/');
-        secure_url = `${urlParts[0]}/upload/fl_attachment/${urlParts[1]}`;
-      }
-
+      const result = await response.json();
+      const { url, name } = result; // Obtenemos la URL y el nombre sanitizado
 
       const folderDocRef = doc(db, "docs_folders", folderId);
       await addDoc(collection(folderDocRef, "files"), {
-        name: fileToUpload.name,
-        url: secure_url,
-        public_id: result.public_id,
+        name: name, // Usamos el nombre sanitizado que nos devuelve el servidor
+        url: url, 
         createdAt: new Date(),
       });
 
-      toast({ title: "¡Éxito!", description: `El archivo "${fileToUpload.name}" se ha subido.` });
+      toast({ title: "¡Éxito!", description: `El archivo \"${name}\" se ha subido.` });
 
       setFileToUpload(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
       setUploadDialogOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error subiendo el archivo:", error);
-      toast({ variant: "destructive", title: "Error al subir el archivo" });
+      toast({ variant: "destructive", title: "Error al subir el archivo", description: error.message });
     } finally {
       setIsUploading(false);
     }
   };
 
+  const handleEdit = (file: StoredFile) => {
+    setEditingFile(file);
+    setNewFileName(file.name);
+    setEditDialogOpen(true);
+  };
+  
+  const handleUpdateFileName = async () => {
+    if (!editingFile || !newFileName.trim()) return;
+
+    const fileDocRef = doc(db, `docs_folders/${folderId}/files`, editingFile.id);
+
+    try {
+        await updateDoc(fileDocRef, { name: newFileName.trim() });
+        toast({ title: "Éxito", description: "El nombre del archivo ha sido actualizado." });
+        setEditDialogOpen(false);
+        setEditingFile(null);
+    } catch (error: any) {
+        console.error("Error actualizando el nombre del archivo:", error);
+        toast({ variant: "destructive", title: "Error al actualizar", description: error.message });
+    }
+  };
+  
+  const handleDelete = async (file: StoredFile) => {
+    if (!window.confirm(`¿Estás seguro de que quieres eliminar \"${file.name}\"? Esta acción no se puede deshacer.`)) {
+      return;
+    }
+
+    const authToken = await getAuthToken();
+    if (!authToken) {
+        toast({ variant: "destructive", title: "Error de autenticación" });
+        return;
+    }
+
+    const filePath = decodeURIComponent(file.url.split("/documentos/").pop() || "");
+    if (!filePath) {
+        toast({ variant: "destructive", title: "Error", description: "No se pudo obtener la ruta del archivo." });
+        return;
+    }
+
+    try {
+        const response = await fetch("/api/documents/delete", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${authToken}`,
+            },
+            body: JSON.stringify({ filePath }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "No se pudo eliminar el archivo de Supabase.");
+        }
+
+        const fileDocRef = doc(db, `docs_folders/${folderId}/files`, file.id);
+        await deleteDoc(fileDocRef);
+
+        toast({ title: "Éxito", description: `El archivo \"${file.name}\" ha sido eliminado.` });
+
+    } catch (error: any) {
+        console.error("Error eliminando el archivo:", error);
+        toast({ variant: "destructive", title: "Error al eliminar", description: error.message });
+    }
+  };
+
   return (
     <div className="container mx-auto">
+        <Dialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Editar Nombre del Archivo</DialogTitle>
+                    <DialogDescription>
+                      Aquí puedes cambiar el nombre del archivo. Haz clic en Guardar Cambios cuando termines.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <Label htmlFor="new-file-name">Nuevo nombre</Label>
+                    <Input id="new-file-name" value={newFileName} onChange={(e) => setNewFileName(e.target.value)} />
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Cancelar</Button>
+                    <Button onClick={handleUpdateFileName}>Guardar Cambios</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
       <div className="flex justify-between items-center mb-4">
         <Button className="bg-white text-black hover:bg-white" onClick={() => router.push('/documentos')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -154,7 +213,7 @@ export default function FolderContentPage() {
         {userProfile?.role === "Admin Intranet" && (
           <Dialog open={isUploadDialogOpen} onOpenChange={setUploadDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button onClick={() => setFileToUpload(null)}> {/* Resetea el archivo al abrir el diálogo */}
                 <PlusCircle className="mr-2" />
                 Subir Archivo
               </Button>
@@ -162,16 +221,19 @@ export default function FolderContentPage() {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Subir Nuevo Archivo</DialogTitle>
+                 <DialogDescription>
+                  Arrastra un archivo o haz clic en la zona para seleccionarlo.
+                </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
-                <div>
-                  <Label htmlFor="file-upload">Selecciona un archivo</Label>
-                  <Input id="file-upload" type="file" ref={fileInputRef} onChange={handleFileSelect} />
-                </div>
+                 <FileUploader onFileSelect={setFileToUpload} disabled={isUploading} />
               </div>
-              <Button onClick={handleUpload} disabled={isUploading}>
-                {isUploading ? "Subiendo..." : "Subir Archivo"}
-              </Button>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setUploadDialogOpen(false)} disabled={isUploading}>Cancelar</Button>
+                <Button onClick={handleUpload} disabled={!fileToUpload || isUploading}>
+                  {isUploading ? "Subiendo..." : "Subir Archivo"}
+                </Button>
+              </DialogFooter>
             </DialogContent>
           </Dialog>
         )}
@@ -199,13 +261,27 @@ export default function FolderContentPage() {
                           <FileText className="w-5 h-5 mr-3 text-muted-foreground" />
                           {file.name}
                         </TableCell>
-                        <TableCell className="text-right">
-                          <a href={file.url} download={file.name} target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline" size="sm">
-                              <Download className="mr-2 h-4 w-4" />
-                              Descargar
-                            </Button>
-                          </a>
+                        <TableCell>
+                            <div className="flex justify-end items-center gap-2">
+                                <a href={file.url} download={file.name} target="_blank" rel="noopener noreferrer">
+                                  <Button variant="outline" size="icon" className="sm:w-auto sm:px-3">
+                                    <Download className="h-4 w-4" />
+                                    <span className="hidden sm:inline sm:ml-2">Descargar</span>
+                                  </Button>
+                                </a>
+                                {userProfile?.role === 'Admin Intranet' && (
+                                    <>
+                                    <Button size="icon" onClick={() => handleEdit(file)} className="bg-yellow-400 text-black hover:bg-yellow-500 sm:w-auto sm:px-3">
+                                        <Edit className="h-4 w-4" />
+                                        <span className="hidden sm:inline sm:ml-2">Editar</span>
+                                    </Button>
+                                    <Button variant="destructive" size="icon" onClick={() => handleDelete(file)} className="sm:w-auto sm:px-3">
+                                        <Trash2 className="h-4 w-4" />
+                                        <span className="hidden sm:inline sm:ml-2">Eliminar</span>
+                                    </Button>
+                                    </>
+                                )}
+                            </div>
                         </TableCell>
                       </TableRow>
                     ))}
