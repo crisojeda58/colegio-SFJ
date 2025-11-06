@@ -39,6 +39,14 @@ export default function FolderContentPage() {
   const [editingFile, setEditingFile] = React.useState<StoredFile | null>(null);
   const [newFileName, setNewFileName] = React.useState("");
 
+  // Define the accepted file types and the descriptive text for documents.
+  const documentAcceptOptions = {
+    "application/pdf": [".pdf"],
+    "application/msword": [".doc"],
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+  };
+  const documentAcceptText = "Solo se aceptan archivos PDF y Word (DOC, DOCX).";
+
   React.useEffect(() => {
     if (!folderId) return;
 
@@ -98,11 +106,11 @@ export default function FolderContentPage() {
       }
 
       const result = await response.json();
-      const { url, name } = result; // Obtenemos la URL y el nombre sanitizado
+      const { url, name } = result;
 
       const folderDocRef = doc(db, "docs_folders", folderId);
       await addDoc(collection(folderDocRef, "files"), {
-        name: name, // Usamos el nombre sanitizado que nos devuelve el servidor
+        name: name,
         url: url, 
         createdAt: new Date(),
       });
@@ -119,6 +127,7 @@ export default function FolderContentPage() {
     }
   };
 
+  // ... (handleEdit, handleUpdateFileName, handleDelete remain the same)
   const handleEdit = (file: StoredFile) => {
     setEditingFile(file);
     setNewFileName(file.name);
@@ -186,7 +195,8 @@ export default function FolderContentPage() {
 
   return (
     <div className="container mx-auto">
-        <Dialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen}>
+        {/* ... (Edit dialog remains the same) ... */}
+         <Dialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen}>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Editar Nombre del Archivo</DialogTitle>
@@ -213,7 +223,7 @@ export default function FolderContentPage() {
         {userProfile?.role === "Admin Intranet" && (
           <Dialog open={isUploadDialogOpen} onOpenChange={setUploadDialogOpen}>
             <DialogTrigger asChild>
-              <Button onClick={() => setFileToUpload(null)}> {/* Resetea el archivo al abrir el diálogo */}
+              <Button onClick={() => setFileToUpload(null)}>
                 <PlusCircle className="mr-2" />
                 Subir Archivo
               </Button>
@@ -226,7 +236,13 @@ export default function FolderContentPage() {
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
-                 <FileUploader onFileSelect={setFileToUpload} disabled={isUploading} />
+                 {/* Pass the new props to the FileUploader */}
+                 <FileUploader 
+                    onFileSelect={setFileToUpload} 
+                    disabled={isUploading}
+                    accept={documentAcceptOptions}
+                    acceptText={documentAcceptText}
+                 />
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setUploadDialogOpen(false)} disabled={isUploading}>Cancelar</Button>
@@ -241,6 +257,7 @@ export default function FolderContentPage() {
 
       <h1 className="text-3xl font-bold text-card mb-4">{folderName}</h1>
 
+      {/* ... (Rest of the page remains the same) ... */}
       <main className="flex-1 bg-transparent">
         <section>
           <h2 className="text-xl font-bold mb-4 text-white">Archivos</h2>

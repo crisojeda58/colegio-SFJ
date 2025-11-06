@@ -1,86 +1,80 @@
+'use client';
 
-"use client";
+import { UploadCloud } from 'lucide-react';
+import { useDropzone, type DropzoneOptions } from 'react-dropzone';
+import { twMerge } from 'tailwind-merge';
+import { useState } from 'react';
 
-import { UploadCloud } from "lucide-react";
-import * as React from "react";
-import { useDropzone, type DropzoneOptions } from "react-dropzone";
-import { twMerge } from "tailwind-merge";
-
-const variants = {
-  base: "relative rounded-lg p-4 w-full flex justify-center items-center flex-col cursor-pointer border-2 border-dashed border-muted-foreground/25",
-  active: "border-primary",
-  disabled: "bg-muted-foreground/10 cursor-default pointer-events-none",
-  accept: "border-green-500",
-  reject: "border-red-500",
-};
-
-export type FileUploaderProps = {
+// 1. We've added `accept` and `acceptText` to the props to make the component reusable.
+interface FileUploaderProps extends React.HTMLAttributes<HTMLDivElement> {
   onFileSelect: (file: File | null) => void;
   disabled?: boolean;
-};
+  accept?: DropzoneOptions['accept'];
+  acceptText?: string;
+}
 
-export function FileUploader({ onFileSelect, disabled }: FileUploaderProps) {
-  const [file, setFile] = React.useState<File | null>(null);
+export function FileUploader({
+  onFileSelect,
+  className,
+  disabled,
+  accept, // The new prop for file types
+  acceptText, // The new prop for the descriptive text
+  ...props
+}: FileUploaderProps) {
+  const [file, setFile] = useState<File | null>(null);
 
-  const onDrop = React.useCallback((acceptedFiles: File[], rejectedFiles: any) => {
-    if (acceptedFiles.length > 0) {
-      const selectedFile = acceptedFiles[0];
-      setFile(selectedFile);
-      onFileSelect(selectedFile);
-    } else {
-        // Puedes manejar los archivos rechazados aquí si quieres
-        setFile(null);
-        onFileSelect(null);
-    }
-  }, [onFileSelect]);
-  
-  const options: DropzoneOptions = {
+  const onDrop = (acceptedFiles: File[]) => {
+    const selectedFile = acceptedFiles[0] || null;
+    setFile(selectedFile);
+    onFileSelect(selectedFile);
+  };
+
+  const dropzoneOptions: DropzoneOptions = {
     onDrop,
-    maxFiles: 1,
     multiple: false,
     disabled,
-    accept: {
-      "application/pdf": [".pdf"],
-      "application/msword": [".doc"],
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
-      "application/vnd.ms-excel": [".xls"],
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
-      "application/vnd.ms-powerpoint": [".ppt"],
-      "application/vnd.openxmlformats-officedocument.presentationml.presentation": [".pptx"],
-      "image/*": [".jpg", ".jpeg", ".png", ".gif"],
+    // 2. We use the `accept` prop, or default to images if it's not provided.
+    accept: accept ?? {
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
+      'image/webp': ['.webp'],
+      'image/gif': ['.gif'],
     },
   };
 
-  const { getRootProps, getInputProps, isDragActive, isDragAccept, isDragReject } = useDropzone(options);
+  const { getRootProps, getInputProps, isDragActive } = useDropzone(dropzoneOptions);
+
+  // ... (rest of the component is the same)
 
   return (
     <div
-      {...getRootProps({
-        className: twMerge(
-          variants.base,
-          isDragActive && variants.active,
-          disabled && variants.disabled,
-          isDragAccept && variants.accept,
-          isDragReject && variants.reject
-        ),
-      })}
+      {...getRootProps()}
+      className={twMerge(
+        'group relative grid h-48 w-full cursor-pointer place-items-center rounded-lg border-2 border-dashed border-muted-foreground/25 px-5 py-2.5 text-center transition hover:bg-muted/80',
+        'ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+        isDragActive && "border-primary",
+        className
+      )}
+      {...props}
     >
       <input {...getInputProps()} />
-
-      <div className="flex flex-col items-center justify-center text-center">
-        <UploadCloud className="w-12 h-12 text-muted-foreground" />
-        <p className="mt-2 text-sm text-muted-foreground">
-          <span className="font-semibold">Arrastra y suelta</span> o haz clic para seleccionar un archivo
-        </p>
-        <p className="text-xs text-muted-foreground/80 mt-1">
-          PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, e imágenes.
-        </p>
-        {file && (
-          <p className="mt-4 text-sm font-medium text-foreground">
-            Archivo seleccionado: {file.name}
+      {
+        <div className="flex flex-col items-center justify-center text-center">
+          <UploadCloud className="w-12 h-12 text-muted-foreground" />
+          <p className="mt-2 text-sm text-muted-foreground">
+            <span className="font-semibold">Arrastra y suelta</span> o haz clic para seleccionar un archivo
           </p>
-        )}
-      </div>
+          {/* 3. We display the custom `acceptText`, or default to the image text. */}
+          <p className="text-xs text-muted-foreground/80 mt-1">
+            {acceptText ?? "Solo se aceptan archivos de imagen (JPG, PNG, WEBP, GIF)."}
+          </p>
+          {file && (
+            <p className="mt-4 text-sm font-medium text-foreground">
+              Archivo seleccionado: {file.name}
+            </p>
+          )}
+        </div>
+      }
     </div>
   );
 }

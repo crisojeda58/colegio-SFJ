@@ -1,8 +1,8 @@
 
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { onAuthStateChanged, type User, getIdToken } from 'firebase/auth'; // Import getIdToken
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { onAuthStateChanged, type User, getIdToken } from 'firebase/auth';
 import { doc, getDoc, collection, getDocs, Timestamp } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
@@ -12,7 +12,7 @@ export interface UserProfile {
   name: string;
   email: string;
   role: string;
-  avatarUrl: string;
+  avatarUrl: string; // Reverted to avatarUrl
   department: string;
   jobTitle : string;
   phone: string;
@@ -23,7 +23,8 @@ export interface AuthContextType {
   userProfile: UserProfile | null;
   loading: boolean;
   isBirthdayToday: boolean; 
-  getAuthToken: () => Promise<string | null>; // Add getAuthToken to the type
+  getAuthToken: () => Promise<string | null>;
+  updateProfilePhoto: (newAvatarUrl: string) => void; // Changed to accept newAvatarUrl
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -43,33 +44,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userDocSnap = await getDoc(userDocRef);
         if (userDocSnap.exists()) {
           const data = userDocSnap.data();
+          // Reverted to use avatarUrl
           setUserProfile({ uid: user.uid, name: data.name, email: data.email, role: data.role, avatarUrl: data.avatarUrl, department: data.department, jobTitle: data.jobTitle, phone: data.phone });
         } else {
-            setUserProfile(null);
+          setUserProfile(null);
         }
 
         try {
-            const usersCollection = collection(db, "users");
-            const querySnapshot = await getDocs(usersCollection);
-            const today = new Date();
-            const currentMonth = today.getMonth();
-            const currentDay = today.getDate();
-            
-            let birthdayFound = false;
-            for (const userDoc of querySnapshot.docs) {
-                const userData = userDoc.data();
-                if (userData.birthdate && userData.birthdate instanceof Timestamp) {
-                    const birthdate = userData.birthdate.toDate();
-                    if (birthdate.getMonth() === currentMonth && birthdate.getDate() === currentDay) {
-                        birthdayFound = true;
-                        break; 
-                    }
-                }
+          const usersCollection = collection(db, "users");
+          const querySnapshot = await getDocs(usersCollection);
+          const today = new Date();
+          const currentMonth = today.getMonth();
+          const currentDay = today.getDate();
+          
+          let birthdayFound = false;
+          for (const userDoc of querySnapshot.docs) {
+            const userData = userDoc.data();
+            if (userData.birthdate && userData.birthdate instanceof Timestamp) {
+              const birthdate = userData.birthdate.toDate();
+              if (birthdate.getMonth() === currentMonth && birthdate.getDate() === currentDay) {
+                birthdayFound = true;
+                break; 
+              }
             }
-            setIsBirthdayToday(birthdayFound);
+          }
+          setIsBirthdayToday(birthdayFound);
         } catch (error) {
-            console.error("Error checking for birthdays:", error);
-            setIsBirthdayToday(false);
+          console.error("Error checking for birthdays:", error);
+          setIsBirthdayToday(false);
         }
 
         setLoading(false);
@@ -84,7 +86,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, [router]);
 
-  // Define the function to get the user's ID token
   const getAuthToken = async (): Promise<string | null> => {
     if (auth.currentUser) {
       try {
@@ -98,7 +99,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return null;
   };
 
-  const value = { user, userProfile, loading, isBirthdayToday, getAuthToken }; // Add getAuthToken to the provider value
+  // Updated function to use avatarUrl
+  const updateProfilePhoto = useCallback((newAvatarUrl: string) => {
+    setUserProfile(currentProfile => {
+      if (currentProfile) {
+        return { ...currentProfile, avatarUrl: newAvatarUrl };
+      }
+      return null;
+    });
+  }, []);
+
+  const value = { user, userProfile, loading, isBirthdayToday, getAuthToken, updateProfilePhoto };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
