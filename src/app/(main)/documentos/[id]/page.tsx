@@ -1,34 +1,21 @@
+
 "use client";
 
 import * as React from "react";
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, FileText, PlusCircle, Download } from "lucide-react";
+import { ArrowLeft, FileText, PlusCircle, Download, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { db } from "@/lib/firebase";
-import { collection, doc, getDoc, addDoc, onSnapshot, query } from "firebase/firestore";
+import { collection, doc, getDoc, addDoc, onSnapshot, query, deleteDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from '@/lib/supabase'; // Import Supabase client for deletion
 
-// Define the type for a file stored in Firestore
 interface StoredFile {
   id: string;
   name: string;
@@ -39,7 +26,7 @@ export default function FolderContentPage() {
   const router = useRouter();
   const params = useParams();
   const folderId = params.id as string;
-  const { userProfile } = useAuth();
+  const { userProfile, getAuthToken } = useAuth(); // Get getAuthToken from context
 
   const { toast } = useToast();
   const [folderName, setFolderName] = React.useState("Cargando...");
@@ -86,11 +73,9 @@ export default function FolderContentPage() {
       return;
     }
 
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-
-    if (!cloudName || !uploadPreset) {
-      toast({ variant: "destructive", title: "Error de configuración de Cloudinary" });
+    const authToken = await getAuthToken();
+    if (!authToken) {
+      toast({ variant: "destructive", title: "Error de autenticación" });
       return;
     }
 
@@ -99,35 +84,29 @@ export default function FolderContentPage() {
     try {
       const formData = new FormData();
       formData.append("file", fileToUpload);
-      formData.append("upload_preset", uploadPreset);
-      formData.append("folder", `intranet_colegio/documentos/${folderName}`);
-      formData.append("resource_type", "auto"); // Let Cloudinary auto-detect the file type
 
-      // Use the generic upload endpoint
-      const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/upload`;
+      // Llama a nuestra API segura
+      const response = await fetch("/api/documents/upload", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: formData,
+      });
 
-      const uploadResponse = await fetch(uploadUrl, { method: "POST", body: formData });
-
-      if (!uploadResponse.ok) {
-        const errorText = await uploadResponse.text();
-        console.error("Cloudinary upload failed:", errorText);
-        throw new Error("Falló la subida del archivo a Cloudinary.");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Falló la subida del archivo.");
       }
 
-      const result = await uploadResponse.json();
-      // For non-image files, the URL for download needs the fl_attachment flag.
-      let secure_url = result.secure_url;
-      if (result.resource_type === 'raw') {
-        const urlParts = secure_url.split('/upload/');
-        secure_url = `${urlParts[0]}/upload/fl_attachment/${urlParts[1]}`;
-      }
+      const result = await response.json();
+      const { url } = result;
 
-
+      // Guarda la información del archivo en Firestore
       const folderDocRef = doc(db, "docs_folders", folderId);
       await addDoc(collection(folderDocRef, "files"), {
         name: fileToUpload.name,
-        url: secure_url,
-        public_id: result.public_id,
+        url: url, // La URL devuelta por nuestra API
         createdAt: new Date(),
       });
 
@@ -136,9 +115,9 @@ export default function FolderContentPage() {
       setFileToUpload(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
       setUploadDialogOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error subiendo el archivo:", error);
-      toast({ variant: "destructive", title: "Error al subir el archivo" });
+      toast({ variant: "destructive", title: "Error al subir el archivo", description: error.message });
     } finally {
       setIsUploading(false);
     }
@@ -169,7 +148,7 @@ export default function FolderContentPage() {
                   <Input id="file-upload" type="file" ref={fileInputRef} onChange={handleFileSelect} />
                 </div>
               </div>
-              <Button onClick={handleUpload} disabled={isUploading}>
+              <Button onClick={handleUpload} disabled={!fileToUpload || isUploading}>
                 {isUploading ? "Subiendo..." : "Subir Archivo"}
               </Button>
             </DialogContent>
@@ -199,7 +178,7 @@ export default function FolderContentPage() {
                           <FileText className="w-5 h-5 mr-3 text-muted-foreground" />
                           {file.name}
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right space-x-2">
                           <a href={file.url} download={file.name} target="_blank" rel="noopener noreferrer">
                             <Button variant="outline" size="sm">
                               <Download className="mr-2 h-4 w-4" />

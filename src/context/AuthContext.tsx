@@ -2,7 +2,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { onAuthStateChanged, type User } from 'firebase/auth';
+import { onAuthStateChanged, type User, getIdToken } from 'firebase/auth'; // Import getIdToken
 import { doc, getDoc, collection, getDocs, Timestamp } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
@@ -23,6 +23,7 @@ export interface AuthContextType {
   userProfile: UserProfile | null;
   loading: boolean;
   isBirthdayToday: boolean; 
+  getAuthToken: () => Promise<string | null>; // Add getAuthToken to the type
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -83,7 +84,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, [router]);
 
-  const value = { user, userProfile, loading, isBirthdayToday };
+  // Define the function to get the user's ID token
+  const getAuthToken = async (): Promise<string | null> => {
+    if (auth.currentUser) {
+      try {
+        const token = await getIdToken(auth.currentUser);
+        return token;
+      } catch (error) {
+        console.error('Error getting auth token:', error);
+        return null;
+      }
+    }
+    return null;
+  };
+
+  const value = { user, userProfile, loading, isBirthdayToday, getAuthToken }; // Add getAuthToken to the provider value
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
