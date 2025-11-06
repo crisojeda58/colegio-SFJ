@@ -14,6 +14,7 @@ import { db } from "@/lib/firebase";
 import { collection, doc, addDoc, onSnapshot, query, deleteDoc, updateDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
+import { FileUploader } from "@/components/ui/file-uploader";
 
 interface StoredFile {
   id: string;
@@ -37,8 +38,6 @@ export default function FolderContentPage() {
   const [isEditDialogOpen, setEditDialogOpen] = React.useState(false);
   const [editingFile, setEditingFile] = React.useState<StoredFile | null>(null);
   const [newFileName, setNewFileName] = React.useState("");
-
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     if (!folderId) return;
@@ -66,12 +65,6 @@ export default function FolderContentPage() {
       unsubscribeFiles();
     };
   }, [folderId]);
-
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files.length > 0) {
-      setFileToUpload(event.target.files[0]);
-    }
-  };
 
   const handleUpload = async () => {
     if (!fileToUpload) {
@@ -114,10 +107,9 @@ export default function FolderContentPage() {
         createdAt: new Date(),
       });
 
-      toast({ title: "¡Éxito!", description: `El archivo "${name}" se ha subido.` });
+      toast({ title: "¡Éxito!", description: `El archivo \"${name}\" se ha subido.` });
 
       setFileToUpload(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
       setUploadDialogOpen(false);
     } catch (error: any) {
       console.error("Error subiendo el archivo:", error);
@@ -221,7 +213,7 @@ export default function FolderContentPage() {
         {userProfile?.role === "Admin Intranet" && (
           <Dialog open={isUploadDialogOpen} onOpenChange={setUploadDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button onClick={() => setFileToUpload(null)}> {/* Resetea el archivo al abrir el diálogo */}
                 <PlusCircle className="mr-2" />
                 Subir Archivo
               </Button>
@@ -230,18 +222,18 @@ export default function FolderContentPage() {
               <DialogHeader>
                 <DialogTitle>Subir Nuevo Archivo</DialogTitle>
                  <DialogDescription>
-                  Selecciona un archivo de tu computador para subirlo a esta carpeta.
+                  Arrastra un archivo o haz clic en la zona para seleccionarlo.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
-                <div>
-                  <Label htmlFor="file-upload">Selecciona un archivo</Label>
-                  <Input id="file-upload" type="file" ref={fileInputRef} onChange={handleFileSelect} />
-                </div>
+                 <FileUploader onFileSelect={setFileToUpload} disabled={isUploading} />
               </div>
-              <Button onClick={handleUpload} disabled={!fileToUpload || isUploading}>
-                {isUploading ? "Subiendo..." : "Subir Archivo"}
-              </Button>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setUploadDialogOpen(false)} disabled={isUploading}>Cancelar</Button>
+                <Button onClick={handleUpload} disabled={!fileToUpload || isUploading}>
+                  {isUploading ? "Subiendo..." : "Subir Archivo"}
+                </Button>
+              </DialogFooter>
             </DialogContent>
           </Dialog>
         )}
@@ -272,20 +264,20 @@ export default function FolderContentPage() {
                         <TableCell>
                             <div className="flex justify-end items-center gap-2">
                                 <a href={file.url} download={file.name} target="_blank" rel="noopener noreferrer">
-                                    <Button variant="outline" size="sm">
-                                    <Download className="mr-2 h-4 w-4" />
-                                    Descargar
-                                    </Button>
+                                  <Button variant="outline" size="icon" className="sm:w-auto sm:px-3">
+                                    <Download className="h-4 w-4" />
+                                    <span className="hidden sm:inline sm:ml-2">Descargar</span>
+                                  </Button>
                                 </a>
                                 {userProfile?.role === 'Admin Intranet' && (
                                     <>
-                                    <Button size="sm" onClick={() => handleEdit(file)} className="bg-yellow-400 text-black hover:bg-yellow-500">
-                                        <Edit className="mr-2 h-4 w-4" />
-                                        Editar
+                                    <Button size="icon" onClick={() => handleEdit(file)} className="bg-yellow-400 text-black hover:bg-yellow-500 sm:w-auto sm:px-3">
+                                        <Edit className="h-4 w-4" />
+                                        <span className="hidden sm:inline sm:ml-2">Editar</span>
                                     </Button>
-                                    <Button variant="destructive" size="sm" onClick={() => handleDelete(file)}>
-                                        <Trash2 className="mr-2 h-4 w-4" />
-                                        Eliminar
+                                    <Button variant="destructive" size="icon" onClick={() => handleDelete(file)} className="sm:w-auto sm:px-3">
+                                        <Trash2 className="h-4 w-4" />
+                                        <span className="hidden sm:inline sm:ml-2">Eliminar</span>
                                     </Button>
                                     </>
                                 )}
