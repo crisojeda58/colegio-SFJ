@@ -3,10 +3,10 @@
 
 import * as React from "react";
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, FileText, PlusCircle, Download, Trash2, Pencil } from "lucide-react";
+import { ArrowLeft, FileText, PlusCircle, Download, Trash2, Edit } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -160,7 +160,7 @@ export default function FolderContentPage() {
         return;
     }
 
-    const filePath = file.url.split("/documentos/").pop();
+    const filePath = decodeURIComponent(file.url.split("/documentos/").pop() || "");
     if (!filePath) {
         toast({ variant: "destructive", title: "Error", description: "No se pudo obtener la ruta del archivo." });
         return;
@@ -198,6 +198,9 @@ export default function FolderContentPage() {
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Editar Nombre del Archivo</DialogTitle>
+                    <DialogDescription>
+                      Aquí puedes cambiar el nombre del archivo. Haz clic en Guardar Cambios cuando termines.
+                    </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                     <Label htmlFor="new-file-name">Nuevo nombre</Label>
@@ -226,6 +229,9 @@ export default function FolderContentPage() {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Subir Nuevo Archivo</DialogTitle>
+                 <DialogDescription>
+                  Selecciona un archivo de tu computador para subirlo a esta carpeta.
+                </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div>
@@ -274,10 +280,12 @@ export default function FolderContentPage() {
                                 {userProfile?.role === 'Admin Intranet' && (
                                     <>
                                     <Button size="sm" onClick={() => handleEdit(file)} className="bg-yellow-400 text-black hover:bg-yellow-500">
-                                        <Pencil className="mr-2 h-4 w-4" />
+                                        <Edit className="mr-2 h-4 w-4" />
+                                        Editar
                                     </Button>
                                     <Button variant="destructive" size="sm" onClick={() => handleDelete(file)}>
                                         <Trash2 className="mr-2 h-4 w-4" />
+                                        Eliminar
                                     </Button>
                                     </>
                                 )}
