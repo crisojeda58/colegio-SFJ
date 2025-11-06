@@ -200,7 +200,6 @@ export default function DocumentosPage() {
           </div>
         )}
       </div>
-
       <main className="flex-1 bg-transparent">
         <section>
           <h2 className="text-xl font-bold mb-4 text-white">Carpetas</h2>
@@ -208,34 +207,36 @@ export default function DocumentosPage() {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {folders.map((folder) => (
                 <div key={folder.id} className="relative">
-                     <Link href={`/documentos/${folder.id}`} legacyBehavior passHref>
-                        <a className={`${isDeleteMode ? 'pointer-events-none' : ''}`}>
-                            <Card
-                                className="cursor-pointer transform transition-transform duration-200 hover:scale-[1.02] overflow-hidden group hover:border-primary"
-                            >
-                                <CardHeader>
-                                <div className="relative w-full h-32">
-                                    <Image
-                                    src={folder.imageUrl}
-                                    alt={folder.name}
-                                    fill
-                                    style={{ objectFit: 'cover' }}
-                                    className="rounded-md"
-                                    quality={75}
-                                    />
-                                </div>
-                                </CardHeader>
-                                <CardContent>
-                                <div className="flex items-center text-foreground">
-                                    <Folder className="w-5 h-5 mr-2 text-muted-foreground" />
-                                    <span className="text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis group-hover:text-primary">
-                                    {folder.name}
-                                    </span>
-                                </div>
-                                </CardContent>
-                            </Card>
-                        </a>
-                    </Link>
+                     <Link
+                       href={`/documentos/${folder.id}`}
+                       className={`${isDeleteMode ? 'pointer-events-none' : ''}`}>
+
+                       <Card
+                           className="cursor-pointer transform transition-transform duration-200 hover:scale-[1.02] overflow-hidden group hover:border-primary"
+                       >
+                           <CardHeader>
+                           <div className="relative w-full h-32">
+                               <Image
+                               src={folder.imageUrl}
+                               alt={folder.name}
+                               fill
+                               style={{ objectFit: 'cover' }}
+                               className="rounded-md"
+                               quality={75}
+                               />
+                           </div>
+                           </CardHeader>
+                           <CardContent>
+                           <div className="flex items-center text-foreground">
+                               <Folder className="w-5 h-5 mr-2 text-muted-foreground" />
+                               <span className="text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis group-hover:text-primary">
+                               {folder.name}
+                               </span>
+                           </div>
+                           </CardContent>
+                       </Card>
+
+                     </Link>
                     {isDeleteMode && (
                         <Button 
                             variant="destructive" 
