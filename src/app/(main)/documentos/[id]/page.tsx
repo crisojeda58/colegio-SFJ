@@ -105,16 +105,16 @@ export default function FolderContentPage() {
       }
 
       const result = await response.json();
-      const { url } = result;
+      const { url, name } = result; // Obtenemos la URL y el nombre sanitizado
 
       const folderDocRef = doc(db, "docs_folders", folderId);
       await addDoc(collection(folderDocRef, "files"), {
-        name: fileToUpload.name,
+        name: name, // Usamos el nombre sanitizado que nos devuelve el servidor
         url: url, 
         createdAt: new Date(),
       });
 
-      toast({ title: "¡Éxito!", description: `El archivo "${fileToUpload.name}" se ha subido.` });
+      toast({ title: "¡Éxito!", description: `El archivo "${name}" se ha subido.` });
 
       setFileToUpload(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -150,7 +150,7 @@ export default function FolderContentPage() {
   };
   
   const handleDelete = async (file: StoredFile) => {
-    if (!window.confirm(`¿Estás seguro de que quieres eliminar "${file.name}"? Esta acción no se puede deshacer.`)) {
+    if (!window.confirm(`¿Estás seguro de que quieres eliminar \"${file.name}\"? Esta acción no se puede deshacer.`)) {
       return;
     }
 
@@ -184,7 +184,7 @@ export default function FolderContentPage() {
         const fileDocRef = doc(db, `docs_folders/${folderId}/files`, file.id);
         await deleteDoc(fileDocRef);
 
-        toast({ title: "Éxito", description: `El archivo "${file.name}" ha sido eliminado.` });
+        toast({ title: "Éxito", description: `El archivo \"${file.name}\" ha sido eliminado.` });
 
     } catch (error: any) {
         console.error("Error eliminando el archivo:", error);

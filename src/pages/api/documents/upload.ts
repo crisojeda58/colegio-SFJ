@@ -12,6 +12,18 @@ export const config = {
   },
 };
 
+const sanitizeFilename = (filename: string): string => {
+  // Normaliza a NFD (Canonical Decomposition) para separar los caracteres base de los diacríticos.
+  const normalized = filename.normalize('NFD');
+  // Elimina los diacríticos (acentos, etc.).
+  const withoutDiacritics = normalized.replace(/[\u0300-\u036f]/g, '');
+  // Reemplaza la 'ñ' y 'Ñ'.
+  const withoutN = withoutDiacritics.replace(/ñ/g, 'n').replace(/Ñ/g, 'N');
+  // Reemplaza espacios con guiones bajos y elimina caracteres no permitidos.
+  // Permite letras, números, puntos, guiones y guiones bajos.
+  return withoutN.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9-._]/g, '');
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method Not Allowed" });
@@ -40,14 +52,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const fileContent = await fs.readFile(file.filepath);
     
-    // Sanitiza el nombre del archivo: reemplaza espacios y otros caracteres problemáticos.
-    const sanitizedFilename = file.originalFilename?.replace(/\s+/g, '_') || 'unnamed_file';
-    const fileName = `${Date.now()}-${sanitizedFilename}`;
+    // Sanitiza el nombre original del archivo para usarlo en la UI y como parte de la ruta.
+    const cleanName = sanitizeFilename(file.originalFilename || 'unnamed_file');
+    const finalFileName = `${Date.now()}-${cleanName}`;
     const bucketName = "documentos";
 
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from(bucketName)
-      .upload(fileName, fileContent, {
+      .upload(finalFileName, fileContent, {
         contentType: file.mimetype || "application/octet-stream",
         upsert: false,
       });
@@ -65,12 +77,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new Error("Could not get public URL for the uploaded file.");
     }
 
-    return res.status(200).json({ url: publicUrlData.publicUrl });
+    // Devuelve la URL pública Y el nombre sanitizado que se usará en Firestore.
+    return res.status(200).json({ url: publicUrlData.publicUrl, name: cleanName });
 
   } catch (error) {
     console.error("Server-side upload error:", error);
     return res.status(500).json({ error: "Internal Server Error" });
   } finally {
+    // Limpia el archivo temporal del disco.
     await fs.unlink(file.filepath);
   }
 }
