@@ -40,6 +40,12 @@ const nextConfig: NextConfig = {
         hostname: 'images.adsttc.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'jjcoikehfpzwmjliqktc.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/**',
       }
     ],
   },
