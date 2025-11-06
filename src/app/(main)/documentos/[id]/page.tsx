@@ -3,18 +3,17 @@
 
 import * as React from "react";
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, FileText, PlusCircle, Download, Trash2 } from "lucide-react";
+import { ArrowLeft, FileText, PlusCircle, Download, Trash2, Pencil } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { db } from "@/lib/firebase";
-import { collection, doc, getDoc, addDoc, onSnapshot, query, deleteDoc } from "firebase/firestore";
+import { collection, doc, addDoc, onSnapshot, query, deleteDoc, updateDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
-import { supabase } from '@/lib/supabase'; // Import Supabase client for deletion
 
 interface StoredFile {
   id: string;
@@ -25,8 +24,8 @@ interface StoredFile {
 export default function FolderContentPage() {
   const router = useRouter();
   const params = useParams();
-  const folderId = params.id as string;
-  const { userProfile, getAuthToken } = useAuth(); // Get getAuthToken from context
+  const folderId = params?.id as string;
+  const { userProfile, getAuthToken } = useAuth(); 
 
   const { toast } = useToast();
   const [folderName, setFolderName] = React.useState("Cargando...");
@@ -34,6 +33,10 @@ export default function FolderContentPage() {
   const [isUploadDialogOpen, setUploadDialogOpen] = React.useState(false);
   const [fileToUpload, setFileToUpload] = React.useState<File | null>(null);
   const [isUploading, setIsUploading] = React.useState(false);
+  
+  const [isEditDialogOpen, setEditDialogOpen] = React.useState(false);
+  const [editingFile, setEditingFile] = React.useState<StoredFile | null>(null);
+  const [newFileName, setNewFileName] = React.useState("");
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -41,7 +44,7 @@ export default function FolderContentPage() {
     if (!folderId) return;
 
     const folderDocRef = doc(db, "docs_folders", folderId);
-    getDoc(folderDocRef).then((docSnap) => {
+    const unsubscribeFolder = onSnapshot(folderDocRef, (docSnap) => {
       if (docSnap.exists()) {
         setFolderName(docSnap.data().name);
       } else {
@@ -50,7 +53,7 @@ export default function FolderContentPage() {
     });
 
     const filesQuery = query(collection(folderDocRef, "files"));
-    const unsubscribe = onSnapshot(filesQuery, (querySnapshot) => {
+    const unsubscribeFiles = onSnapshot(filesQuery, (querySnapshot) => {
       const filesData: StoredFile[] = [];
       querySnapshot.forEach((doc) => {
         filesData.push({ id: doc.id, ...doc.data() } as StoredFile);
@@ -58,7 +61,10 @@ export default function FolderContentPage() {
       setFiles(filesData);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeFolder();
+      unsubscribeFiles();
+    };
   }, [folderId]);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -85,7 +91,6 @@ export default function FolderContentPage() {
       const formData = new FormData();
       formData.append("file", fileToUpload);
 
-      // Llama a nuestra API segura
       const response = await fetch("/api/documents/upload", {
         method: "POST",
         headers: {
@@ -102,11 +107,10 @@ export default function FolderContentPage() {
       const result = await response.json();
       const { url } = result;
 
-      // Guarda la información del archivo en Firestore
       const folderDocRef = doc(db, "docs_folders", folderId);
       await addDoc(collection(folderDocRef, "files"), {
         name: fileToUpload.name,
-        url: url, // La URL devuelta por nuestra API
+        url: url, 
         createdAt: new Date(),
       });
 
@@ -123,8 +127,89 @@ export default function FolderContentPage() {
     }
   };
 
+  const handleEdit = (file: StoredFile) => {
+    setEditingFile(file);
+    setNewFileName(file.name);
+    setEditDialogOpen(true);
+  };
+  
+  const handleUpdateFileName = async () => {
+    if (!editingFile || !newFileName.trim()) return;
+
+    const fileDocRef = doc(db, `docs_folders/${folderId}/files`, editingFile.id);
+
+    try {
+        await updateDoc(fileDocRef, { name: newFileName.trim() });
+        toast({ title: "Éxito", description: "El nombre del archivo ha sido actualizado." });
+        setEditDialogOpen(false);
+        setEditingFile(null);
+    } catch (error: any) {
+        console.error("Error actualizando el nombre del archivo:", error);
+        toast({ variant: "destructive", title: "Error al actualizar", description: error.message });
+    }
+  };
+  
+  const handleDelete = async (file: StoredFile) => {
+    if (!window.confirm(`¿Estás seguro de que quieres eliminar "${file.name}"? Esta acción no se puede deshacer.`)) {
+      return;
+    }
+
+    const authToken = await getAuthToken();
+    if (!authToken) {
+        toast({ variant: "destructive", title: "Error de autenticación" });
+        return;
+    }
+
+    const filePath = file.url.split("/documentos/").pop();
+    if (!filePath) {
+        toast({ variant: "destructive", title: "Error", description: "No se pudo obtener la ruta del archivo." });
+        return;
+    }
+
+    try {
+        const response = await fetch("/api/documents/delete", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${authToken}`,
+            },
+            body: JSON.stringify({ filePath }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "No se pudo eliminar el archivo de Supabase.");
+        }
+
+        const fileDocRef = doc(db, `docs_folders/${folderId}/files`, file.id);
+        await deleteDoc(fileDocRef);
+
+        toast({ title: "Éxito", description: `El archivo "${file.name}" ha sido eliminado.` });
+
+    } catch (error: any) {
+        console.error("Error eliminando el archivo:", error);
+        toast({ variant: "destructive", title: "Error al eliminar", description: error.message });
+    }
+  };
+
   return (
     <div className="container mx-auto">
+        <Dialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Editar Nombre del Archivo</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <Label htmlFor="new-file-name">Nuevo nombre</Label>
+                    <Input id="new-file-name" value={newFileName} onChange={(e) => setNewFileName(e.target.value)} />
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Cancelar</Button>
+                    <Button onClick={handleUpdateFileName}>Guardar Cambios</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
       <div className="flex justify-between items-center mb-4">
         <Button className="bg-white text-black hover:bg-white" onClick={() => router.push('/documentos')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -178,13 +263,25 @@ export default function FolderContentPage() {
                           <FileText className="w-5 h-5 mr-3 text-muted-foreground" />
                           {file.name}
                         </TableCell>
-                        <TableCell className="text-right space-x-2">
-                          <a href={file.url} download={file.name} target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline" size="sm">
-                              <Download className="mr-2 h-4 w-4" />
-                              Descargar
-                            </Button>
-                          </a>
+                        <TableCell>
+                            <div className="flex justify-end items-center gap-2">
+                                <a href={file.url} download={file.name} target="_blank" rel="noopener noreferrer">
+                                    <Button variant="outline" size="sm">
+                                    <Download className="mr-2 h-4 w-4" />
+                                    Descargar
+                                    </Button>
+                                </a>
+                                {userProfile?.role === 'Admin Intranet' && (
+                                    <>
+                                    <Button size="sm" onClick={() => handleEdit(file)} className="bg-yellow-400 text-black hover:bg-yellow-500">
+                                        <Pencil className="mr-2 h-4 w-4" />
+                                    </Button>
+                                    <Button variant="destructive" size="sm" onClick={() => handleDelete(file)}>
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                    </Button>
+                                    </>
+                                )}
+                            </div>
                         </TableCell>
                       </TableRow>
                     ))}
