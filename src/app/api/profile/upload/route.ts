@@ -17,10 +17,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Forbidden: Invalid token" }, { status: 403 });
   }
 
-  // Destructure uid and email from the token
   const { uid, email } = decodedToken;
-
-  // We need the email to create the filename, so it must exist.
   if (!email) {
       return NextResponse.json({ error: "Email not found in Firebase token." }, { status: 400 });
   }
@@ -33,42 +30,62 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const bucketName = "perfiles";
+    const baseFileName = email; // The part of the name without extension
+
+    // 1. Find any existing files for this user (e.g., .jpg, .png)
+    const { data: existingFiles, error: listError } = await supabase.storage
+      .from(bucketName)
+      .list('', { search: baseFileName });
+
+    if (listError) {
+        console.error("Supabase list error:", listError);
+        throw listError;
+    }
+
+    // 2. If old files are found, delete them.
+    if (existingFiles && existingFiles.length > 0) {
+        const filesToDelete = existingFiles.map(f => f.name);
+        const { error: removeError } = await supabase.storage
+            .from(bucketName)
+            .remove(filesToDelete);
+
+        if (removeError) {
+            console.error("Supabase remove error:", removeError);
+            throw removeError;
+        }
+    }
+
+    // 3. Now, upload the new file.
     const fileContent = Buffer.from(await file.arrayBuffer());
     const fileExtension = file.name.split('.').pop();
-    
-    // CONSTRUCT THE FILENAME USING THE EMAIL, as seen in your screenshot.
-    const fileName = `${email}.${fileExtension}`;
-    const bucketName = "perfiles";
+    const newFileName = `${baseFileName}.${fileExtension}`;
 
-    const { error: uploadError } = await supabase.storage
+    const { data: uploadData, error: uploadError } = await supabase.storage
       .from(bucketName)
-      .update(fileName, fileContent, {
+      .upload(newFileName, fileContent, {
         contentType: file.type || "application/octet-stream",
-        upsert: true,
-        cacheControl: '0',
+        cacheControl: '0', // No cache for new uploads
       });
 
     if (uploadError) {
-      console.error("Supabase update/upload error:", uploadError);
+      console.error("Supabase upload error:", uploadError);
       throw uploadError;
     }
 
     const { data: publicUrlData } = supabase.storage
       .from(bucketName)
-      .getPublicUrl(fileName);
+      .getPublicUrl(newFileName);
 
     if (!publicUrlData) {
       throw new Error("Could not get public URL for the uploaded file.");
     }
-    
-    // Create the unique, cache-busting URL.
+
     const finalAvatarUrl = `${publicUrlData.publicUrl}?t=${new Date().getTime()}`;
 
-    // Update both Firebase Auth and Firestore with the cache-busted URL.
     await admin.auth().updateUser(uid, { photoURL: finalAvatarUrl });
     await admin.firestore().collection('users').doc(uid).update({ avatarUrl: finalAvatarUrl });
 
-    // Return the same URL to the client for immediate UI update.
     return NextResponse.json({ avatarUrl: finalAvatarUrl }, { status: 200 });
 
   } catch (error) {
