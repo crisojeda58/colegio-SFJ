@@ -55,7 +55,11 @@ const ImageCard = ({ src, alt }: { src: string; alt: string; }) => (
 export default function GalleryPage() {
   return (
     <div className="container mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-card">Galería Multimedia</h1>
+      <h1 className="text-3xl font-bold mb-6">
+        <span className="bg-sidebar text-primary-foreground px-3 py-1 rounded-md">
+          Galería Multimedia
+        </span>
+      </h1>
       <Tabs defaultValue="aniversario" orientation="vertical" className="flex flex-col md:flex-row gap-8">
         <TabsList className="flex flex-row md:flex-col h-auto md:h-full">
           <TabsTrigger value="aniversario">Aniversario 2023</TabsTrigger>

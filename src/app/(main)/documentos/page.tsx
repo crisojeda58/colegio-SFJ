@@ -155,7 +155,11 @@ export default function DocumentosPage() {
   return (
     <div className="container mx-auto">
       <div className="flex justify-between items-center mb-2">
-        <h1 className="text-3xl font-bold text-card">Documentos</h1>
+        <h1 className="text-3xl font-bold">
+          <span className="bg-sidebar text-primary-foreground px-3 py-1 rounded-md">
+            Documentos
+          </span>
+        </h1>
         {userProfile?.role === "Admin Intranet" && (
           <div className="flex gap-2">
             <Dialog open={isCreateFolderOpen} onOpenChange={(isOpen) => { setCreateFolderOpen(isOpen); if (!isOpen) resetCreateDialog(); }}>
@@ -202,7 +206,11 @@ export default function DocumentosPage() {
       </div>
       <main className="flex-1 bg-transparent">
         <section>
-          <h2 className="text-xl font-bold mb-4 text-white">Carpetas</h2>
+          <h2 className="text-xl font-bold mb-4">
+            <span className="bg-sidebar text-primary-foreground px-3 py-1 rounded-md">
+              Carpetas
+            </span>
+          </h2>
           {folders.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {folders.map((folder) => (

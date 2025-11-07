@@ -112,7 +112,11 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="container mx-auto">
-        <h1 className="text-3xl font-bold mb-6 text-card">Perfil de Usuario</h1>
+        <h1 className="text-3xl font-bold mb-6">
+          <span className="bg-sidebar text-primary-foreground px-3 py-1 rounded-md">
+            Perfil de Usuario
+          </span>
+        </h1>
         <Card>
           <CardHeader className="flex flex-col md:flex-row items-start gap-6 space-y-0">
             <Skeleton className="h-24 w-24 rounded-full" />
@@ -142,7 +146,11 @@ export default function ProfilePage() {
   // This structure solves the runtime error
   return (
     <div className="container mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-card">Perfil de Usuario</h1>
+      <h1 className="text-3xl font-bold mb-6">
+        <span className="bg-sidebar text-primary-foreground px-3 py-1 rounded-md">
+          Perfil de Usuario
+        </span>
+      </h1>
       <Dialog open={isUploadDialogOpen} onOpenChange={setUploadDialogOpen}>
         <Card>
           <CardHeader className="flex flex-col md:flex-row items-start gap-6 space-y-0">

@@ -45,6 +45,10 @@ export default {
           DEFAULT: 'hsl(var(--destructive))',
           foreground: 'hsl(var(--destructive-foreground))',
         },
+        'cyan-accent': {
+          DEFAULT: 'hsl(var(--cyan-accent))',
+          foreground: 'hsl(var(--cyan-accent-foreground))',
+        },
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',

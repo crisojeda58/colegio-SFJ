@@ -55,10 +55,16 @@ const chartConfig = {
 export default function ReportsPage() {
   return (
     <div className="container mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-card">Reportes y Estadísticas</h1>
-      <p className="text-card/80 mb-8">
-        Análisis del uso y la participación en la intranet del colegio.
-      </p>
+        <h1 className="text-3xl font-bold mb-6">
+            <span className="bg-sidebar text-primary-foreground px-3 py-1 rounded-md">
+                Reportes y Estadísticas
+            </span>
+        </h1>
+        <p className="mb-8">
+            <span className="bg-sidebar text-primary-foreground px-3 py-1 rounded-md">
+                Análisis del uso y la participación en la intranet del colegio.
+            </span>
+        </p>
 
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">

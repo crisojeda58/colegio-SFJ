@@ -68,12 +68,18 @@ export default function BirthdaysPage() {
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
           <Cake className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold text-card">Cumpleaños del mes</h1>
+          <h1 className="text-3xl font-bold">
+            <span className="bg-sidebar text-primary-foreground px-3 py-1 rounded-md">
+              Cumpleaños del mes
+            </span>
+          </h1>
         </div>
       </div>
 
-      <p className="text-white font-bold mb-6">
-        Estos son los cumpleaños para el mes de <span className="capitalize text-white font-bold">{monthName}</span>.
+      <p className="mb-6">
+        <span className="bg-sidebar text-primary-foreground px-3 py-1 rounded-md font-bold">
+            Estos son los cumpleaños para el mes de <span className="capitalize">{monthName}</span>.
+        </span>
       </p>
 
       {loading ? (
