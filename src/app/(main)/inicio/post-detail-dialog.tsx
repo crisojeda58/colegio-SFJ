@@ -36,7 +36,7 @@ interface PostDetailDialogProps {
 }
 
 export function PostDetailDialog({ newsItemId, children, onPostDeleted, onPostEdited }: PostDetailDialogProps) {
-  const { userProfile } = useAuth();
+  const { userProfile, getAuthToken } = useAuth();
   const { toast } = useToast();
   
   const [isOpen, setIsOpen] = useState(false);
@@ -82,17 +82,40 @@ export function PostDetailDialog({ newsItemId, children, onPostDeleted, onPostEd
   };
 
   const handleDelete = async () => {
+    if (!newsItem || !newsItem.imageUrl || !getAuthToken) {
+      toast({ variant: "destructive", title: "Error", description: "No se puede eliminar, falta información o autenticación." });
+      return;
+    }
+
     setIsDeleting(true);
-    const newsDocRef = doc(db, "news_items", newsItemId);
+
     try {
-        await deleteDoc(newsDocRef);
-        toast({ title: "Noticia eliminada", description: "El artículo ha sido eliminado." });
-        onPostDeleted();
-        setIsOpen(false);
-    } catch (error) {
-        console.error("Error deleting news item:", error);
-        toast({ variant: "destructive", title: "Error al eliminar", description: "No se pudo eliminar la noticia." });
-        setIsDeleting(false);
+      const idToken = await getAuthToken();
+      if (!idToken) {
+        throw new Error("No se pudo obtener el token de autenticación.");
+      }
+
+      await fetch('/api/news/delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ oldImageUrl: newsItem.imageUrl }),
+      });
+
+      const newsDocRef = doc(db, "news_items", newsItemId);
+      await deleteDoc(newsDocRef);
+
+      toast({ title: "Noticia eliminada", description: "El artículo y su imagen han sido eliminados." });
+      onPostDeleted();
+      setIsOpen(false);
+
+    } catch (error: any) {
+      console.error("Error deleting news item:", error);
+      toast({ variant: "destructive", title: "Error al eliminar", description: error.message || "No se pudo eliminar la noticia." });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
