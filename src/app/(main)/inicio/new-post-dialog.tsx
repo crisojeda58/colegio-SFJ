@@ -50,7 +50,7 @@ interface NewPostDialogProps {
 }
 
 export function NewPostDialog({ onPostCreated }: NewPostDialogProps) {
-  const { user, userProfile } = useAuth();
+  const { user, userProfile, getAuthToken } = useAuth();
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -111,40 +111,41 @@ export function NewPostDialog({ onPostCreated }: NewPostDialogProps) {
   };
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    if (!user || !userProfile) {
+    if (!user || !userProfile || !getAuthToken) {
       toast({ variant: "destructive", title: "Error", description: "Debes iniciar sesión para crear una publicación." });
-      return;
-    }
-
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-
-    if (!cloudName || !uploadPreset) {
-      toast({ variant: "destructive", title: "Error de configuración", description: "La configuración de Cloudinary no está completa." });
       return;
     }
 
     setIsSubmitting(true);
 
     try {
+      const idToken = await getAuthToken();
+      if (!idToken) {
+        throw new Error("No se pudo obtener el token de autenticación.");
+      }
+
+      // 1. Upload image to Supabase via our API
       const imageFile = data.image[0];
       const formData = new FormData();
       formData.append('file', imageFile);
-      formData.append('upload_preset', uploadPreset);
-      formData.append('folder', 'intranet_colegio/noticias');
 
-      const uploadResponse = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+      const uploadResponse = await fetch('/api/news/upload', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${idToken}`,
+        },
         body: formData,
       });
 
       if (!uploadResponse.ok) {
-        throw new Error('La subida de la imagen falló.');
+        const errorData = await uploadResponse.json();
+        throw new Error(errorData.error || 'La subida de la imagen falló.');
       }
 
       const uploadedImageData = await uploadResponse.json();
-      const imageUrl = uploadedImageData.secure_url;
-
+      const imageUrl = uploadedImageData.url;
+      
+      // 2. Prepare document data for Firestore
       const [hours, minutes] = data.eventTime.split(':').map(Number);
       const combinedDateTime = new Date(data.eventDate);
       combinedDateTime.setHours(hours, minutes);
@@ -153,7 +154,7 @@ export function NewPostDialog({ onPostCreated }: NewPostDialogProps) {
         title: data.title,
         excerpt: data.excerpt,
         content: data.content,
-        imageUrl: imageUrl,
+        imageUrl: imageUrl, // Use Supabase URL
         eventDate: combinedDateTime,
         category: data.category,
         authorId: user.uid,
@@ -162,6 +163,7 @@ export function NewPostDialog({ onPostCreated }: NewPostDialogProps) {
         publishedAt: serverTimestamp(),
       };
 
+      // 3. Save the document to Firestore
       await addDoc(collection(db, "news_items"), docData);
 
       toast({ title: "¡Éxito!", description: "La publicación ha sido creada." });
@@ -195,7 +197,9 @@ export function NewPostDialog({ onPostCreated }: NewPostDialogProps) {
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogTitle>Crear Nueva Noticia/Evento</DialogTitle>
+        <DialogHeader>
+          <DialogTitle>Crear Nueva Noticia/Evento</DialogTitle>
+        </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-1">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

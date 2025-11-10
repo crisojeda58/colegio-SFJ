@@ -216,7 +216,11 @@ export default function NewsAndCalendarPage() {
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold">Bienvenidos al portal de Educadores</h2>
       </div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-card">Avisos y Eventos</h1>
+        <h1 className="text-3xl font-bold">
+          <span className="bg-sidebar text-primary-foreground px-3 py-1 rounded-md">
+            Avisos y Eventos
+          </span>
+        </h1>
         {canCreateNews && (
           <NewPostDialog onPostCreated={fetchNews} />
         )}
@@ -296,7 +300,9 @@ export default function NewsAndCalendarPage() {
                 <div className="flex items-center gap-4 mb-4 sm:mb-0">
                     <CalendarDays className="h-10 w-10 text-primary flex-shrink-0" />
                     <div>
-                        <h3 className="text-xl font-bold">Calendario Académico</h3>
+                        <h3 className="text-xl font-bold">
+                            Calendario Académico
+                        </h3>
                         <p className="text-muted-foreground">Abiri el calendario académico del semestre.</p>
                     </div>
                 </div>

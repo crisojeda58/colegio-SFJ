@@ -272,7 +272,11 @@ export default function KitchenPage() {
   return (
     <div className="container mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-card">Minuta de Cocina Semanal</h1>
+        <h1 className="text-3xl font-bold">
+          <span className="bg-sidebar text-primary-foreground px-3 py-1 rounded-md">
+            Minuta de Cocina Semanal
+          </span>
+        </h1>
         {canEditMenu && (
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>

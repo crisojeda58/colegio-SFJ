@@ -23,6 +23,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/context/AuthContext";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -48,6 +49,7 @@ interface EditPostDialogProps {
 }
 
 export function EditPostDialog({ newsItemId, onPostEdited, children }: EditPostDialogProps) {
+  const { getAuthToken } = useAuth();
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -135,34 +137,58 @@ export function EditPostDialog({ newsItemId, onPostEdited, children }: EditPostD
   };
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-
-    if (!cloudName || !uploadPreset) {
-      toast({ variant: "destructive", title: "Error de configuración", description: "Cloudinary no está configurado." });
-      return;
+    if (!getAuthToken) {
+        toast({ variant: "destructive", title: "Error de autenticación", description: "No se puede verificar el usuario." });
+        return;
     }
     
     setIsSubmitting(true);
     
     try {
-      let imageUrl = initialImageUrl;
-      if (data.image && data.image.length > 0) {
-        const imageFile = data.image[0];
-        const formData = new FormData();
-        formData.append('file', imageFile);
-        formData.append('upload_preset', uploadPreset);
-        formData.append('folder', 'intranet_colegio/noticias');
+        const idToken = await getAuthToken();
+        if (!idToken) throw new Error("El token de autenticación no está disponible.");
 
-        const uploadResponse = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-          method: 'POST',
-          body: formData,
-        });
+        let imageUrl = initialImageUrl;
+        const newImageFile = data.image?.[0];
 
-        if (!uploadResponse.ok) throw new Error('Falló la subida de la nueva imagen.');
-        const uploadedImageData = await uploadResponse.json();
-        imageUrl = uploadedImageData.secure_url;
-      }
+        // If a new image is being uploaded
+        if (newImageFile) {
+            // 1. Delete the old image if it exists
+            if (initialImageUrl) {
+                const deleteResponse = await fetch('/api/news/delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${idToken}`,
+                    },
+                    body: JSON.stringify({ oldImageUrl: initialImageUrl }),
+                });
+                if (!deleteResponse.ok) {
+                    // We can log this but not block the upload of the new image
+                    console.warn("No se pudo eliminar la imagen anterior, pero se continuará con la nueva subida.");
+                }
+            }
+
+            // 2. Upload the new image
+            const formData = new FormData();
+            formData.append('file', newImageFile);
+
+            const uploadResponse = await fetch('/api/news/upload', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${idToken}`,
+                },
+                body: formData,
+            });
+
+            if (!uploadResponse.ok) {
+                const errorData = await uploadResponse.json();
+                throw new Error(errorData.error || 'Falló la subida de la nueva imagen.');
+            }
+
+            const uploadedImageData = await uploadResponse.json();
+            imageUrl = uploadedImageData.url;
+        }
       
       const [hours, minutes] = data.eventTime.split(':').map(Number);
       const combinedDateTime = new Date(data.eventDate);
@@ -174,7 +200,7 @@ export function EditPostDialog({ newsItemId, onPostEdited, children }: EditPostD
         category: data.category,
         excerpt: data.excerpt,
         content: data.content,
-        imageUrl: imageUrl,
+        imageUrl: imageUrl, // New or old URL
         eventDate: combinedDateTime,
         lastEdited: serverTimestamp(),
       });
@@ -251,7 +277,8 @@ export function EditPostDialog({ newsItemId, onPostEdited, children }: EditPostD
                             </div>
                             <Input id="file-upload-edit" type="file" className="hidden" onChange={handleImageChange} accept={ACCEPTED_IMAGE_TYPES.join(',')} />
                           </label>
-                        )}\n                        </div>
+                        )}
+                        </div>
                       </FormControl>
                       <FormMessage className="mt-2" />
                     </FormItem>

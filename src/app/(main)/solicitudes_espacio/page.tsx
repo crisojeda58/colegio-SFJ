@@ -5,10 +5,7 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -109,16 +106,20 @@ export default function SolicitudesEspacio() {
   };
 
   return (
-    <div className="flex-1 p-4 md:p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Formulario de Solicitud</CardTitle>
-          <CardDescription>
+    <div className="container mx-auto">
+       <h1 className="text-3xl font-bold mb-6">
+        <span className="bg-sidebar text-primary-foreground px-3 py-1 rounded-md">
+          Formulario de Solicitud
+        </span>
+      </h1>
+      <p className="mb-6">
+        <span className="bg-sidebar text-primary-foreground px-3 py-1 rounded-md">
             Complete el formulario para solicitar un espacio o materiales.
-          </CardDescription>
-        </CardHeader>
+        </span>
+      </p>
+      <Card>
         <form onSubmit={handleSubmit}>
-          <CardContent className="grid gap-6">
+          <CardContent className="grid gap-6 pt-6">
             <div className="grid gap-2">
               <Label htmlFor="space">Espacio Solicitado</Label>
               <Select onValueChange={setSpace} value={space}>

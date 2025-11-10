@@ -50,7 +50,11 @@ export default function CourseHeadsPage() {
 
   return (
     <div className="container mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-card">Información de Jefaturas de Curso</h1>
+      <h1 className="text-3xl font-bold mb-6">
+        <span className="bg-sidebar text-primary-foreground px-3 py-1 rounded-md">
+          Información de Jefaturas de Curso
+        </span>
+      </h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading ? (
@@ -103,4 +107,3 @@ export default function CourseHeadsPage() {
     </div>
   );
 }
-

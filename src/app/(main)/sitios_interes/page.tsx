@@ -92,11 +92,17 @@ export default function SitiosDeInteresPage() {
   return (
     <div className="container mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-card">Sitios de Interés</h1>
+        <h1 className="text-3xl font-bold">
+          <span className="bg-sidebar text-primary-foreground px-3 py-1 rounded-md">
+            Sitios de Interés
+          </span>
+        </h1>
         {isAdmin && <NewSiteDialog onSiteCreated={fetchSites} />}
       </div>
-      <p className="text-white mb-8 font-bold">
-        Una colección de enlaces a recursos externos, portales educativos y sitios de relevancia para nuestra comunidad escolar.
+      <p className="mb-8 font-bold">
+        <span className="bg-sidebar text-primary-foreground px-3 py-1 rounded-md">
+          Una colección de enlaces a recursos externos, portales educativos y sitios de relevancia.
+        </span>
       </p>
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -121,7 +127,7 @@ export default function SitiosDeInteresPage() {
       </AlertDialog>
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {Array.from({ length: 8 }).map((_, index) => (
             <Card key={index} className="flex flex-col">
               <CardHeader className="flex-row gap-4 items-center">
@@ -144,7 +150,7 @@ export default function SitiosDeInteresPage() {
           ))}
         </div>
       ) : sites.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {sites.map((site) => {
             const Icon = iconMap[site.icon] || Globe;
             return (

@@ -7,7 +7,6 @@ import { db } from "@/lib/firebase";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Mail, Phone, Search } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -71,8 +70,16 @@ export default function ColleaguesPage() {
 
   return (
     <div className="container mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-card">Nuevos Educadores</h1>
-      <p className="text-card mb-6">Colegas que se han unido este año.</p>
+      <h1 className="text-3xl font-bold mb-6">
+        <span className="bg-sidebar text-primary-foreground px-3 py-1 rounded-md">
+          Nuevos Educadores
+        </span>
+      </h1>
+      <p className="mb-6">
+        <span className="bg-sidebar text-primary-foreground px-3 py-1 rounded-md">
+          Colegas que se han unido este año.
+        </span>
+      </p>
       <div className="relative mb-6">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
         <Input
@@ -82,32 +89,32 @@ export default function ColleaguesPage() {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
-      <Card className="bg-indigo-100">
+      <Card className="bg-cyan-accent border-cyan-accent text-cyan-accent-foreground">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead className="text-foreground font-bold">Nombre</TableHead>
-                <TableHead className="text-foreground font-bold">Departamento</TableHead>
-                <TableHead className="text-foreground font-bold">Cargo</TableHead>
-                <TableHead className="text-foreground font-bold">Teléfono</TableHead>
-                <TableHead className="text-foreground font-bold">Email</TableHead>
+              <TableRow className="border-b-cyan-accent-foreground/20 hover:bg-cyan-accent/80">
+                <TableHead className="text-cyan-accent-foreground font-bold">Nombre</TableHead>
+                <TableHead className="text-cyan-accent-foreground font-bold">Departamento</TableHead>
+                <TableHead className="text-cyan-accent-foreground font-bold">Cargo</TableHead>
+                <TableHead className="text-cyan-accent-foreground font-bold">Teléfono</TableHead>
+                <TableHead className="text-cyan-accent-foreground font-bold">Email</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 Array.from({ length: 3 }).map((_, index) => (
-                  <TableRow key={index}>
-                    <TableCell><Skeleton className="h-10 w-40" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-28" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                  <TableRow key={index} className="border-b-cyan-accent-foreground/20">
+                    <TableCell><Skeleton className="h-10 w-40 bg-cyan-accent-foreground/10" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-28 bg-cyan-accent-foreground/10" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24 bg-cyan-accent-foreground/10" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24 bg-cyan-accent-foreground/10" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-48 bg-cyan-accent-foreground/10" /></TableCell>
                   </TableRow>
                 ))
               ) : (
                 filteredEmployees.map((employee) => (
-                  <TableRow key={employee.id}>
+                  <TableRow key={employee.id} className="border-b-cyan-accent-foreground/20 hover:bg-cyan-accent/80">
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar className="h-9 w-9">
@@ -125,16 +132,16 @@ export default function ColleaguesPage() {
                     </TableCell>
                     <TableCell>
                       {employee.phone ? (
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground whitespace-nowrap">
+                          <div className="flex items-center gap-2 text-sm text-cyan-accent-foreground/80 whitespace-nowrap">
                               <Phone className="h-4 w-4" />
                               {employee.phone}
                           </div>
                       ) : (
-                          <span className="text-xs text-muted-foreground">No disponible</span>
+                          <span className="text-xs text-cyan-accent-foreground/60">No disponible</span>
                       )}
                     </TableCell>
                     <TableCell>
-                      <a href={`mailto:${employee.email}`} className="flex items-center gap-2 text-sm hover:underline text-muted-foreground hover:text-primary whitespace-nowrap">
+                      <a href={`mailto:${employee.email}`} className="flex items-center gap-2 text-sm hover:underline text-cyan-accent-foreground/80 hover:text-primary whitespace-nowrap">
                           <Mail className="h-4 w-4" />
                           {employee.email}
                       </a>
@@ -143,7 +150,7 @@ export default function ColleaguesPage() {
                 ))
               )}
               {!loading && filteredEmployees.length === 0 && (
-                  <TableRow>
+                  <TableRow className="border-b-cyan-accent-foreground/20">
                       <TableCell colSpan={5} className="h-24 text-center">
                           No hay colegas nuevos este año.
                       </TableCell>

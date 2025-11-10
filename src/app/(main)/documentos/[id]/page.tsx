@@ -3,11 +3,12 @@
 
 import * as React from "react";
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, FileText, PlusCircle, Download, Trash2, Edit } from "lucide-react";
+import { ArrowLeft, FileText, PlusCircle, Download, Trash2, Edit, MoreVertical } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { db } from "@/lib/firebase";
@@ -39,7 +40,6 @@ export default function FolderContentPage() {
   const [editingFile, setEditingFile] = React.useState<StoredFile | null>(null);
   const [newFileName, setNewFileName] = React.useState("");
 
-  // Define the accepted file types and the descriptive text for documents.
   const documentAcceptOptions = {
     "application/pdf": [".pdf"],
     "application/msword": [".doc"],
@@ -127,7 +127,6 @@ export default function FolderContentPage() {
     }
   };
 
-  // ... (handleEdit, handleUpdateFileName, handleDelete remain the same)
   const handleEdit = (file: StoredFile) => {
     setEditingFile(file);
     setNewFileName(file.name);
@@ -195,7 +194,6 @@ export default function FolderContentPage() {
 
   return (
     <div className="container mx-auto">
-        {/* ... (Edit dialog remains the same) ... */}
          <Dialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen}>
             <DialogContent>
                 <DialogHeader>
@@ -215,52 +213,59 @@ export default function FolderContentPage() {
             </DialogContent>
         </Dialog>
 
-      <div className="flex justify-between items-center mb-4">
-        <Button className="bg-white text-black hover:bg-white" onClick={() => router.push('/documentos')}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Volver
-        </Button>
-        {userProfile?.role === "Admin Intranet" && (
-          <Dialog open={isUploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => setFileToUpload(null)}>
-                <PlusCircle className="mr-2" />
-                Subir Archivo
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Subir Nuevo Archivo</DialogTitle>
-                 <DialogDescription>
-                  Arrastra un archivo o haz clic en la zona para seleccionarlo.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                 {/* Pass the new props to the FileUploader */}
-                 <FileUploader 
-                    onFileSelect={setFileToUpload} 
-                    disabled={isUploading}
-                    accept={documentAcceptOptions}
-                    acceptText={documentAcceptText}
-                 />
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setUploadDialogOpen(false)} disabled={isUploading}>Cancelar</Button>
-                <Button onClick={handleUpload} disabled={!fileToUpload || isUploading}>
-                  {isUploading ? "Subiendo..." : "Subir Archivo"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
-      </div>
+      
 
-      <h1 className="text-3xl font-bold text-card mb-4">{folderName}</h1>
+      <h1 className="text-3xl font-bold mb-4">
+        <span className="bg-sidebar text-primary-foreground px-3 py-1 rounded-md">
+          {folderName}
+        </span>
+      </h1>
 
-      {/* ... (Rest of the page remains the same) ... */}
       <main className="flex-1 bg-transparent">
         <section>
-          <h2 className="text-xl font-bold mb-4 text-white">Archivos</h2>
+          <h2 className="text-xl font-bold mb-4">
+            <span className="bg-sidebar text-primary-foreground px-3 py-1 rounded-md">
+              Archivos
+            </span>
+          </h2>
+          <div className="flex justify-between items-center mb-4">
+            <Button className="bg-white text-black hover:bg-gray-200" onClick={() => router.push('/documentos')}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Volver
+            </Button>
+            {userProfile?.role === "Admin Intranet" && (
+              <Dialog open={isUploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={() => setFileToUpload(null)}>
+                    <PlusCircle className="mr-2" />
+                    Subir Archivo
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Subir Nuevo Archivo</DialogTitle>
+                    <DialogDescription>
+                      Arrastra un archivo o haz clic en la zona para seleccionarlo.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <FileUploader 
+                        onFileSelect={setFileToUpload} 
+                        disabled={isUploading}
+                        accept={documentAcceptOptions}
+                        acceptText={documentAcceptText}
+                    />
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setUploadDialogOpen(false)} disabled={isUploading}>Cancelar</Button>
+                    <Button onClick={handleUpload} disabled={!fileToUpload || isUploading}>
+                      {isUploading ? "Subiendo..." : "Subir Archivo"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
           {files.length > 0 ? (
             <Card>
               <CardContent className="pt-6">
@@ -276,27 +281,34 @@ export default function FolderContentPage() {
                       <TableRow key={file.id}>
                         <TableCell className="font-medium flex items-center">
                           <FileText className="w-5 h-5 mr-3 text-muted-foreground" />
-                          {file.name}
+                          <span className="font-semibold">{file.name}</span>
                         </TableCell>
                         <TableCell>
                             <div className="flex justify-end items-center gap-2">
                                 <a href={file.url} download={file.name} target="_blank" rel="noopener noreferrer">
-                                  <Button variant="outline" size="icon" className="sm:w-auto sm:px-3">
+                                  <Button size="icon" className="sm:w-auto sm:px-3">
                                     <Download className="h-4 w-4" />
                                     <span className="hidden sm:inline sm:ml-2">Descargar</span>
                                   </Button>
                                 </a>
                                 {userProfile?.role === 'Admin Intranet' && (
-                                    <>
-                                    <Button size="icon" onClick={() => handleEdit(file)} className="bg-yellow-400 text-black hover:bg-yellow-500 sm:w-auto sm:px-3">
-                                        <Edit className="h-4 w-4" />
-                                        <span className="hidden sm:inline sm:ml-2">Editar</span>
-                                    </Button>
-                                    <Button variant="destructive" size="icon" onClick={() => handleDelete(file)} className="sm:w-auto sm:px-3">
-                                        <Trash2 className="h-4 w-4" />
-                                        <span className="hidden sm:inline sm:ml-2">Eliminar</span>
-                                    </Button>
-                                    </>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                <MoreVertical className="h-4 w-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem onClick={() => handleEdit(file)}>
+                                                <Edit className="mr-2 h-4 w-4" />
+                                                <span>Editar</span>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => handleDelete(file)} className="text-red-500 focus:text-red-500">
+                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                <span>Eliminar</span>
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
                                 )}
                             </div>
                         </TableCell>
