@@ -38,7 +38,6 @@
     "@supabase/supabase-js": "^2.79.0",
     "@types/formidable": "^3.4.6",
     "class-variance-authority": "^0.7.1",
-    "cloudinary": "^2.5.0",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.6.0",
