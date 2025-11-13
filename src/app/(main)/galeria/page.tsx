@@ -8,6 +8,7 @@ import {
   PlusCircle,
   Trash2,
   UploadCloud,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -70,6 +71,7 @@ export default function GalleryFinalPage() {
   const [photos, setPhotos] = React.useState<Photo[]>([]);
   const [loadingAlbums, setLoadingAlbums] = React.useState(true);
   const [loadingPhotos, setLoadingPhotos] = React.useState(false);
+  const [photoToView, setPhotoToView] = React.useState<Photo | null>(null); // State for lightbox
 
   // --- Admin States ---
   const [isCreateAlbumOpen, setCreateAlbumOpen] = React.useState(false);
@@ -465,7 +467,8 @@ export default function GalleryFinalPage() {
                     {photos.map((photo) => (
                       <Card
                         key={photo.id}
-                        className="overflow-hidden group relative aspect-square"
+                        onClick={() => setPhotoToView(photo)} // Open lightbox
+                        className="overflow-hidden group relative aspect-square cursor-pointer transition-transform hover:scale-105"
                       >
                         <Image
                           src={photo.url}
@@ -476,7 +479,10 @@ export default function GalleryFinalPage() {
                         />
                         {userProfile?.role === "Admin Intranet" && (
                           <button
-                            onClick={() => setPhotoToDelete(photo)}
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent opening lightbox
+                              setPhotoToDelete(photo);
+                            }}
                             className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -502,7 +508,26 @@ export default function GalleryFinalPage() {
         </main>
       </div>
 
-      {/* --- Alert Dialogs --- */}
+      {/* --- Alert Dialogs & Lightbox --- */}
+
+      {/* Photo Viewer Lightbox */}
+      <Dialog open={photoToView !== null} onOpenChange={() => setPhotoToView(null)}>
+        <DialogContent className="max-w-4xl p-0 bg-transparent border-0">
+          {photoToView && (
+            <div className="relative w-full h-full">
+              <Image
+                src={photoToView.url}
+                alt={photoToView.alt || "Vista ampliada"}
+                width={1920} // Larger size for better quality
+                height={1080}
+                className="object-contain w-full h-auto max-h-[90vh] rounded-lg"
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Album Deletion Dialog */}
       <AlertDialog
         open={albumToDelete !== null}
         onOpenChange={() => setAlbumToDelete(null)}
@@ -529,6 +554,7 @@ export default function GalleryFinalPage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Photo Deletion Dialog */}
       <AlertDialog
         open={photoToDelete !== null}
         onOpenChange={() => setPhotoToDelete(null)}
