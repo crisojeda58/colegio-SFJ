@@ -308,16 +308,27 @@ export default function GalleryFinalPage() {
                     <button
                       onClick={() => setSelectedAlbum(album)}
                       className={cn(
-                        "w-full text-left p-2 rounded-md flex items-center justify-between transition-colors",
-                        selectedAlbum?.id === album.id
-                          ? "bg-secondary text-secondary-foreground" // Use gray for selected
-                          : "bg-muted text-muted-foreground" // Use lighter gray for non-selected
+                        "w-full text-left p-2 rounded-md flex items-center justify-between transition-colors bg-muted"
                       )}
                     >
-                      <span className="truncate font-medium text-sm">
+                      <span
+                        className={cn(
+                          "truncate text-sm",
+                          selectedAlbum?.id === album.id
+                            ? "font-bold text-primary"
+                            : "font-medium text-foreground"
+                        )}
+                      >
                         {album.name}
                       </span>
-                      <ChevronRight className="h-4 w-4 flex-shrink-0" />
+                      <ChevronRight
+                        className={cn(
+                          "h-4 w-4 flex-shrink-0",
+                          selectedAlbum?.id === album.id
+                            ? "text-primary"
+                            : "text-foreground"
+                        )}
+                      />
                     </button>
                     {userProfile?.role === "Admin Intranet" && (
                       <button
