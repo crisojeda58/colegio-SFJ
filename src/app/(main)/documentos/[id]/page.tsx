@@ -7,6 +7,16 @@ import { ArrowLeft, FileText, PlusCircle, Download, Trash2, Edit, MoreVertical }
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -39,6 +49,7 @@ export default function FolderContentPage() {
   const [isEditDialogOpen, setEditDialogOpen] = React.useState(false);
   const [editingFile, setEditingFile] = React.useState<StoredFile | null>(null);
   const [newFileName, setNewFileName] = React.useState("");
+  const [fileToDelete, setFileToDelete] = React.useState<StoredFile | null>(null);
 
   const documentAcceptOptions = {
     "application/pdf": [".pdf"],
@@ -115,7 +126,7 @@ export default function FolderContentPage() {
         createdAt: new Date(),
       });
 
-      toast({ title: "¡Éxito!", description: `El archivo \"${name}\" se ha subido.` });
+      toast({ title: "¡Éxito!", description: `El archivo \'${name}\' se ha subido.` });
 
       setFileToUpload(null);
       setUploadDialogOpen(false);
@@ -149,10 +160,12 @@ export default function FolderContentPage() {
     }
   };
   
-  const handleDelete = async (file: StoredFile) => {
-    if (!window.confirm(`¿Estás seguro de que quieres eliminar \"${file.name}\"? Esta acción no se puede deshacer.`)) {
-      return;
-    }
+  const handleDelete = (file: StoredFile) => {
+    setFileToDelete(file);
+  };
+
+  const confirmDelete = async () => {
+    if (!fileToDelete) return;
 
     const authToken = await getAuthToken();
     if (!authToken) {
@@ -160,7 +173,7 @@ export default function FolderContentPage() {
         return;
     }
 
-    const filePath = decodeURIComponent(file.url.split("/documentos/").pop() || "");
+    const filePath = decodeURIComponent(fileToDelete.url.split("/documentos/").pop() || "");
     if (!filePath) {
         toast({ variant: "destructive", title: "Error", description: "No se pudo obtener la ruta del archivo." });
         return;
@@ -181,19 +194,22 @@ export default function FolderContentPage() {
             throw new Error(errorData.error || "No se pudo eliminar el archivo de Supabase.");
         }
 
-        const fileDocRef = doc(db, `docs_folders/${folderId}/files`, file.id);
+        const fileDocRef = doc(db, `docs_folders/${folderId}/files`, fileToDelete.id);
         await deleteDoc(fileDocRef);
 
-        toast({ title: "Éxito", description: `El archivo \"${file.name}\" ha sido eliminado.` });
+        toast({ title: "Éxito", description: `El archivo \'${fileToDelete.name}\' ha sido eliminado.` });
 
     } catch (error: any) {
         console.error("Error eliminando el archivo:", error);
         toast({ variant: "destructive", title: "Error al eliminar", description: error.message });
+    } finally {
+        setFileToDelete(null);
     }
   };
 
   return (
-    <div className="container mx-auto">
+    <>
+      <div className="container mx-auto">
          <Dialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen}>
             <DialogContent>
                 <DialogHeader>
@@ -213,124 +229,137 @@ export default function FolderContentPage() {
             </DialogContent>
         </Dialog>
 
-      
+        <h1 className="text-3xl font-bold mb-4">
+          <span className="bg-sidebar text-primary-foreground px-3 py-1 rounded-md">
+            {folderName}
+          </span>
+        </h1>
 
-      <h1 className="text-3xl font-bold mb-4">
-        <span className="bg-sidebar text-primary-foreground px-3 py-1 rounded-md">
-          {folderName}
-        </span>
-      </h1>
-
-      <main className="flex-1 bg-transparent">
-        <section>
-          <h2 className="text-xl font-bold mb-4">
-            <span className="bg-sidebar text-primary-foreground px-3 py-1 rounded-md">
-              Archivos
-            </span>
-          </h2>
-          <div className="flex justify-between items-center mb-4">
-            <Button className="bg-white text-black hover:bg-gray-200" onClick={() => router.push('/documentos')}>
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Volver
-            </Button>
-            {userProfile?.role === "Admin Intranet" && (
-              <Dialog open={isUploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button onClick={() => setFileToUpload(null)}>
-                    <PlusCircle className="mr-2" />
-                    Subir Archivo
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Subir Nuevo Archivo</DialogTitle>
-                    <DialogDescription>
-                      Arrastra un archivo o haz clic en la zona para seleccionarlo.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <FileUploader 
-                        onFileSelect={setFileToUpload} 
-                        disabled={isUploading}
-                        accept={documentAcceptOptions}
-                        acceptText={documentAcceptText}
-                    />
-                  </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setUploadDialogOpen(false)} disabled={isUploading}>Cancelar</Button>
-                    <Button onClick={handleUpload} disabled={!fileToUpload || isUploading}>
-                      {isUploading ? "Subiendo..." : "Subir Archivo"}
+        <main className="flex-1 bg-transparent">
+          <section>
+            <h2 className="text-xl font-bold mb-4">
+              <span className="bg-sidebar text-primary-foreground px-3 py-1 rounded-md">
+                Archivos
+              </span>
+            </h2>
+            <div className="flex justify-between items-center mb-4">
+              <Button className="bg-white text-black hover:bg-gray-200" onClick={() => router.push('/documentos')}>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Volver
+              </Button>
+              {userProfile?.role === "Admin Intranet" && (
+                <Dialog open={isUploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button onClick={() => setFileToUpload(null)}>
+                      <PlusCircle className="mr-2" />
+                      Subir Archivo
                     </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            )}
-          </div>
-          {files.length > 0 ? (
-            <Card>
-              <CardContent className="pt-6">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Nombre del Archivo</TableHead>
-                      <TableHead className="text-right">Acciones</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {files.map((file) => (
-                      <TableRow key={file.id}>
-                        <TableCell className="font-medium flex items-center">
-                          <FileText className="w-5 h-5 mr-3 text-muted-foreground" />
-                          <span className="font-semibold">{file.name}</span>
-                        </TableCell>
-                        <TableCell>
-                            <div className="flex justify-end items-center gap-2">
-                                <a href={file.url} download={file.name} target="_blank" rel="noopener noreferrer">
-                                  <Button size="icon" className="sm:w-auto sm:px-3">
-                                    <Download className="h-4 w-4" />
-                                    <span className="hidden sm:inline sm:ml-2">Descargar</span>
-                                  </Button>
-                                </a>
-                                {userProfile?.role === 'Admin Intranet' && (
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                <MoreVertical className="h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuItem onClick={() => handleEdit(file)}>
-                                                <Edit className="mr-2 h-4 w-4" />
-                                                <span>Editar</span>
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => handleDelete(file)} className="text-red-500 focus:text-red-500">
-                                                <Trash2 className="mr-2 h-4 w-4" />
-                                                <span>Eliminar</span>
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                )}
-                            </div>
-                        </TableCell>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Subir Nuevo Archivo</DialogTitle>
+                      <DialogDescription>
+                        Arrastra un archivo o haz clic en la zona para seleccionarlo.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <FileUploader 
+                          onFileSelect={setFileToUpload} 
+                          disabled={isUploading}
+                          accept={documentAcceptOptions}
+                          acceptText={documentAcceptText}
+                      />
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setUploadDialogOpen(false)} disabled={isUploading}>Cancelar</Button>
+                      <Button onClick={handleUpload} disabled={!fileToUpload || isUploading}>
+                        {isUploading ? "Subiendo..." : "Subir Archivo"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
+            {files.length > 0 ? (
+              <Card>
+                <CardContent className="pt-6">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Nombre del Archivo</TableHead>
+                        <TableHead className="text-right">Acciones</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center text-muted-foreground">
-                  <FileText className="w-12 h-12 mx-auto mb-4" />
-                  <p>No hay archivos en esta carpeta.</p>
-                  <p>Sube tu primer archivo para empezar.</p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </section>
-      </main>
-    </div>
+                    </TableHeader>
+                    <TableBody>
+                      {files.map((file) => (
+                        <TableRow key={file.id}>
+                          <TableCell className="font-medium flex items-center">
+                            <FileText className="w-5 h-5 mr-3 text-muted-foreground" />
+                            <span className="font-semibold">{file.name}</span>
+                          </TableCell>
+                          <TableCell>
+                              <div className="flex justify-end items-center gap-2">
+                                  <a href={file.url} download={file.name} target="_blank" rel="noopener noreferrer">
+                                    <Button size="icon" className="sm:w-auto sm:px-3">
+                                      <Download className="h-4 w-4" />
+                                      <span className="hidden sm:inline sm:ml-2">Descargar</span>
+                                    </Button>
+                                  </a>
+                                  {userProfile?.role === 'Admin Intranet' && (
+                                      <DropdownMenu>
+                                          <DropdownMenuTrigger asChild>
+                                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                  <MoreVertical className="h-4 w-4" />
+                                              </Button>
+                                          </DropdownMenuTrigger>
+                                          <DropdownMenuContent align="end">
+                                              <DropdownMenuItem onClick={() => handleEdit(file)}>
+                                                  <Edit className="mr-2 h-4 w-4" />
+                                                  <span>Editar</span>
+                                              </DropdownMenuItem>
+                                              <DropdownMenuItem onClick={() => handleDelete(file)} className="text-red-500 focus:text-red-500">
+                                                  <Trash2 className="mr-2 h-4 w-4" />
+                                                  <span>Eliminar</span>
+                                              </DropdownMenuItem>
+                                          </DropdownMenuContent>
+                                      </DropdownMenu>
+                                  )}
+                              </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-center text-muted-foreground">
+                    <FileText className="w-12 h-12 mx-auto mb-4" />
+                    <p>No hay archivos en esta carpeta.</p>
+                    <p>Sube tu primer archivo para empezar.</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </section>
+        </main>
+      </div>
+      <AlertDialog open={fileToDelete !== null} onOpenChange={() => setFileToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción es irreversible. Se eliminará permanentemente el archivo "{fileToDelete?.name}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>Confirmar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

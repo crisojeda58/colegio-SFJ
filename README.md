@@ -7,7 +7,8 @@ Esta es una aplicación web desarrollada con Next.js y Firebase, diseñada para 
 *   **Autenticación de Usuarios:** Sistema de inicio de sesión para acceder a los recursos del portal.
 *   **Inicio (Noticias):** Una sección principal donde se publican y visualizan noticias y anuncios importantes.
 *   **Gestor de Documentos:** Permite organizar y compartir archivos en una estructura de carpetas (ahora con Supabase).
-*   **Galería de Fotos:** Muestra álbumes de eventos importantes como el aniversario o ferias científicas.
+*   **Galería de Fotos:** Muestra álbumes de eventos importantes, con vista ampliada y navegación.
+*   **Cocina (Minuta Semanal):** Permite gestionar y visualizar el menú de comidas semanal.
 *   **Secciones Informativas:** Incluye apartados para:
     *   Contactos
     *   Cumpleaños

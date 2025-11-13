@@ -3,6 +3,11 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Función auxiliar para verificar si un usuario es administrador
+    function isAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin Intranet';
+    }
+
     // --- Reglas para la colección 'users' ---
     match /users/{userId} {
       // Cualquiera autenticado puede leer perfiles (para el directorio).
@@ -16,7 +21,8 @@ service cloud.firestore {
     // --- Reglas para la colección 'kitchen_menus' ---
     match /kitchen_menus/{menuId} {
       // Solo usuarios autenticados pueden leer y actualizar el menú (roles se validan en la app).
-      allow read, update: if request.auth != null;
+      allow read: if request.auth != null;
+      allow update: if isAdmin();
       // Nadie puede crear o borrar menús desde la app.
       allow create, delete: if false;
     }
@@ -27,16 +33,18 @@ service cloud.firestore {
       allow read: if request.auth != null;
       // Solo usuarios autenticados pueden escribir (crear/actualizar/borrar).
       // La lógica de roles más específica está en la app.
-      allow write, update, delete: if request.auth != null;
+      allow write, update, delete: if isAdmin();
     }
 
     // --- REGLA PARA CARPETAS Y SUS ARCHIVOS ---
     match /docs_folders/{folderId} {
-      allow read, write, create, delete: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write, create, delete: if isAdmin();
       allow update: if false;
       // Regla para la subcolección de archivos
       match /files/{fileId} {
-        allow read, write, delete, create, update: if request.auth != null;
+        allow read: if request.auth != null;
+        allow write, delete, create, update: if isAdmin();
       }
     }
 
@@ -45,8 +53,23 @@ service cloud.firestore {
         // Cualquiera puede leer los sitios de interés.
         allow read: if request.auth != null;
         // solo administradores puede crear o borrar sitios de interés desde la app.
-        allow create, delete: if request.auth != null;
+        allow create, delete: if isAdmin();
         allow update: if false;
+    }
+
+    // --- Reglas para la colección 'photoAlbums' y su subcolección 'photos' ---
+    match /photoAlbums/{albumId} {
+      // Cualquiera autenticado puede ver los álbumes.
+      allow read: if request.auth != null;
+      // Solo los administradores pueden crear, actualizar y borrar álbumes.
+      allow create, update, delete: if isAdmin();
+      // --- Reglas para la SUBCOLECCIÓN 'photos' anidada ---
+      match /photos/{photoId} {
+        // Cualquier usuario autenticado puede leer las fotos de un álbum.
+        allow read: if request.auth != null;
+        // Solo los administradores pueden modificar o borrar fotos.
+        allow create, update, delete: if isAdmin();
+      }
     }
   }
 }
