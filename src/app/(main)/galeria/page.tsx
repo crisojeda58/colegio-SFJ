@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -33,7 +34,6 @@ import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebase";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-// Changed to import the new gallery-specific uploader
 import { FileUploaderGallery } from "@/components/ui/file-uploader-gallery";
 import {
   addDoc,
@@ -55,7 +55,7 @@ interface Album {
 interface Photo {
   id: string;
   url: string;
-  alt: string; // Keep alt for potential future use
+  alt: string;
   createdAt: any;
 }
 
@@ -310,8 +310,8 @@ export default function GalleryFinalPage() {
                       className={cn(
                         "w-full text-left p-2 rounded-md flex items-center justify-between transition-colors",
                         selectedAlbum?.id === album.id
-                          ? "bg-primary text-primary-foreground"
-                          : "hover:bg-muted"
+                          ? "bg-secondary text-secondary-foreground" // Use gray for selected
+                          : "bg-muted text-muted-foreground" // Use lighter gray for non-selected
                       )}
                     >
                       <span className="truncate font-medium text-sm">
@@ -384,7 +384,7 @@ export default function GalleryFinalPage() {
         <main className="flex-1 flex flex-col">
           {!selectedAlbum ? (
             <div className="flex-1 flex items-center justify-center bg-muted/30 rounded-lg">
-              <div className="text-center text-muted-foreground">
+              <div className="text-center text-foreground">
                 <ImageIcon className="mx-auto h-16 w-16 mb-4" />
                 <h3 className="text-xl font-semibold">Selecciona un álbum</h3>
                 <p>Elige un álbum de la lista para ver sus fotos.</p>
@@ -415,7 +415,6 @@ export default function GalleryFinalPage() {
                           Subir Fotos a "{selectedAlbum.name}"
                         </DialogTitle>
                       </DialogHeader>
-                      {/* Changed to use the new gallery-specific uploader */}
                       <FileUploaderGallery
                         onFileSelect={(files) => setPhotosToUpload(files)}
                         multiple
@@ -528,9 +527,22 @@ export default function GalleryFinalPage() {
             <AlertDialogTitle>
               ¿Seguro que quieres eliminar esta foto?
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta acción es irreversible.
-            </AlertDialogDescription>
+            <div className="my-4">
+              <AlertDialogDescription className="mb-2">
+                Esta acción es irreversible.
+              </AlertDialogDescription>
+              {photoToDelete && (
+                <div className="relative aspect-square w-full max-w-xs mx-auto rounded-md overflow-hidden">
+                  <Image
+                    src={photoToDelete.url}
+                    alt="Previsualización de la foto a eliminar"
+                    width={400}
+                    height={400}
+                    className="object-cover w-full h-full"
+                  />
+                </div>
+              )}
+            </div>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
