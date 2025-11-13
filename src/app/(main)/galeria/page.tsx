@@ -3,12 +3,12 @@
 
 import * as React from "react";
 import {
+  ChevronLeft,
   ChevronRight,
   Image as ImageIcon,
   PlusCircle,
   Trash2,
   UploadCloud,
-  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -71,7 +71,9 @@ export default function GalleryFinalPage() {
   const [photos, setPhotos] = React.useState<Photo[]>([]);
   const [loadingAlbums, setLoadingAlbums] = React.useState(true);
   const [loadingPhotos, setLoadingPhotos] = React.useState(false);
-  const [photoToView, setPhotoToView] = React.useState<Photo | null>(null); // State for lightbox
+  const [currentPhotoIndex, setCurrentPhotoIndex] = React.useState<number | null>(
+    null
+  );
 
   // --- Admin States ---
   const [isCreateAlbumOpen, setCreateAlbumOpen] = React.useState(false);
@@ -290,6 +292,40 @@ export default function GalleryFinalPage() {
     }
   };
 
+  // --- Lightbox Navigation Handlers ---
+  const showNextPhoto = (e: React.MouseEvent | KeyboardEvent) => {
+    e.stopPropagation();
+    if (currentPhotoIndex === null) return;
+    const nextIndex = (currentPhotoIndex + 1) % photos.length;
+    setCurrentPhotoIndex(nextIndex);
+  };
+
+  const showPrevPhoto = (e: React.MouseEvent | KeyboardEvent) => {
+    e.stopPropagation();
+    if (currentPhotoIndex === null) return;
+    const prevIndex = (currentPhotoIndex - 1 + photos.length) % photos.length;
+    setCurrentPhotoIndex(prevIndex);
+  };
+
+  // Effect for keyboard navigation
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (currentPhotoIndex === null) return;
+      if (e.key === "ArrowRight") {
+        showNextPhoto(e);
+      }
+      if (e.key === "ArrowLeft") {
+        showPrevPhoto(e);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [currentPhotoIndex, photos]);
+
+  const photoToView = currentPhotoIndex !== null ? photos[currentPhotoIndex] : null;
+
   return (
     <>
       <div className="container mx-auto h-[calc(100vh-120px)] flex gap-8 py-6">
@@ -464,10 +500,10 @@ export default function GalleryFinalPage() {
               ) : photos.length > 0 ? (
                 <div className="flex-1 overflow-y-auto pr-2 -mr-2">
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                    {photos.map((photo) => (
+                    {photos.map((photo, index) => (
                       <Card
                         key={photo.id}
-                        onClick={() => setPhotoToView(photo)} // Open lightbox
+                        onClick={() => setCurrentPhotoIndex(index)} // Open lightbox at specific index
                         className="overflow-hidden group relative aspect-square cursor-pointer transition-transform hover:scale-105"
                       >
                         <Image
@@ -511,17 +547,40 @@ export default function GalleryFinalPage() {
       {/* --- Alert Dialogs & Lightbox --- */}
 
       {/* Photo Viewer Lightbox */}
-      <Dialog open={photoToView !== null} onOpenChange={() => setPhotoToView(null)}>
-        <DialogContent className="max-w-4xl p-0 bg-transparent border-0">
+      <Dialog
+        open={currentPhotoIndex !== null}
+        onOpenChange={() => setCurrentPhotoIndex(null)}
+      >
+        <DialogContent className="max-w-5xl w-full p-0 bg-transparent border-0 flex items-center justify-center">
           {photoToView && (
-            <div className="relative w-full h-full">
+            <div className="relative flex items-center justify-center w-full">
+              {/* Prev Button */}
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={showPrevPhoto}
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-12 bg-background/50 hover:bg-background/80 text-foreground rounded-full h-10 w-10 z-50"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </Button>
+
               <Image
                 src={photoToView.url}
                 alt={photoToView.alt || "Vista ampliada"}
                 width={1920} // Larger size for better quality
                 height={1080}
-                className="object-contain w-full h-auto max-h-[90vh] rounded-lg"
+                className="object-contain w-auto h-auto max-h-[90vh] rounded-lg select-none"
               />
+
+              {/* Next Button */}
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={showNextPhoto}
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 bg-background/50 hover:bg-background/80 text-foreground rounded-full h-10 w-10 z-50"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </Button>
             </div>
           )}
         </DialogContent>
