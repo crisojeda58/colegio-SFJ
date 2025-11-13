@@ -33,7 +33,8 @@ import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebase";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { FileUploader } from "@/components/ui/file-uploader";
+// Changed to import the new gallery-specific uploader
+import { FileUploaderGallery } from "@/components/ui/file-uploader-gallery";
 import {
   addDoc,
   collection,
@@ -293,7 +294,7 @@ export default function GalleryFinalPage() {
         {/* --- Sidebar --- */}
         <aside className="w-1/4 lg:w-1/5 xl:w-1/6 flex flex-col border-r pr-6">
           <h3 className="text-3xl font-bold mb-4">
-            <span className="bg-primary text-primary-foreground px-3 py-1 rounded-md">
+            <span className="bg-sidebar text-primary-foreground px-3 py-1 rounded-md">
               Álbumes
             </span>
           </h3>
@@ -381,11 +382,6 @@ export default function GalleryFinalPage() {
 
         {/* --- Main Content --- */}
         <main className="flex-1 flex flex-col">
-          <h3 className="text-3xl font-bold mb-4">
-            <span className="bg-primary text-primary-foreground px-3 py-1 rounded-md">
-              Fotos
-            </span>
-          </h3>
           {!selectedAlbum ? (
             <div className="flex-1 flex items-center justify-center bg-muted/30 rounded-lg">
               <div className="text-center text-muted-foreground">
@@ -398,7 +394,7 @@ export default function GalleryFinalPage() {
             <>
               <div className="flex justify-between items-center mb-4">
                 <h1
-                  className="text-2xl font-bold truncate"
+                  className="bg-sidebar text-primary-foreground px-3 py-1 rounded-md"
                   title={selectedAlbum.name}
                 >
                   {selectedAlbum.name}
@@ -419,7 +415,8 @@ export default function GalleryFinalPage() {
                           Subir Fotos a "{selectedAlbum.name}"
                         </DialogTitle>
                       </DialogHeader>
-                      <FileUploader
+                      {/* Changed to use the new gallery-specific uploader */}
+                      <FileUploaderGallery
                         onFileSelect={(files) => setPhotosToUpload(files)}
                         multiple
                         disabled={isUploadingPhotos}
