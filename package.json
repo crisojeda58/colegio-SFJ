@@ -38,6 +38,7 @@
     "@supabase/supabase-js": "^2.79.0",
     "@types/formidable": "^3.4.6",
     "@types/uuid": "^10.0.0",
+    "browser-image-compression": "^2.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
