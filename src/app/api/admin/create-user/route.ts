@@ -45,15 +45,13 @@ export async function POST(request: Request) {
         });
 
         // 4. Preparar el documento del usuario para Firestore con MANEJO ROBUSTO DE FECHA
-        const parts = birthdate.split('-');
-        if (parts.length !== 3) {
-            return NextResponse.json({ message: 'Formato de fecha inválido. Se esperaba DD-MM-YYYY.' }, { status: 400 });
-        }
-        const [day, month, year] = parts.map(Number);
-        const birthdateObject = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+        // El frontend envía la fecha como un string ISO 8601 (ej: "1990-05-15T12:00:00")
+        // Creamos un objeto Date directamente desde este string, que es un formato estándar.
+        const birthdateObject = new Date(birthdate);
 
+        // Verificamos que el objeto Date sea válido
         if (isNaN(birthdateObject.getTime())) {
-            return NextResponse.json({ message: 'La fecha de nacimiento proporcionada no es válida.' }, { status: 400 });
+            return NextResponse.json({ message: 'La fecha de nacimiento proporcionada no es válida. Se esperaba un formato ISO 8601.' }, { status: 400 });
         }
 
         const userData: any = {
@@ -65,8 +63,8 @@ export async function POST(request: Request) {
             status,
             jobTitle,
             avatarUrl: avatarUrl || '',
+            // Convertimos el objeto Date a un Timestamp de Firestore
             birthdate: Timestamp.fromDate(birthdateObject),
-            createdAt: Timestamp.now(),
         };
 
         if (role === 'Profesor Jefe') {

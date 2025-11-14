@@ -35,6 +35,7 @@ export default function CreateUserPage() {
     const [department, setDepartment] = useState('');
     const [status, setStatus] = useState('nuevo');
     const [birthdate, setBirthdate] = useState('');
+    const [birthtime, setBirthtime] = useState('12:00'); // Estado para la hora, con valor por defecto
     const [jobTitle, setJobTitle] = useState('');
 
     const [isLoading, setIsLoading] = useState(false);
@@ -51,6 +52,7 @@ export default function CreateUserPage() {
         setDepartment('');
         setStatus('nuevo');
         setBirthdate('');
+        setBirthtime('12:00'); // Resetear la hora también
         setJobTitle('');
     };
 
@@ -66,8 +68,14 @@ export default function CreateUserPage() {
                 throw new Error('No se pudo obtener el token de autenticación.');
             }
 
+            // Combinar fecha y hora en un string ISO 8601
+            // Esto crea un formato como "YYYY-MM-DDTHH:mm:00" que Firebase interpreta correctamente
+            const birthdateISO = `${birthdate}T${birthtime}:00`;
+
             const body: any = {
-                name, email, password, phone, role, department, status, birthdate, jobTitle,
+                name, email, password, phone, role, department, status, 
+                birthdate: birthdateISO, // Enviar el string combinado
+                jobTitle,
                 avatarUrl: '' // Dejar en blanco como solicitado
             };
 
@@ -132,9 +140,13 @@ export default function CreateUserPage() {
                                 <Label htmlFor="phone">Teléfono Interno (Anexo)</Label>
                                 <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} maxLength={4} placeholder="Ej: 1234"/>
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="birthdate">Fecha de Nacimiento</Label>
-                                <Input id="birthdate" type="date" value={birthdate} onChange={(e) => setBirthdate(e.target.value)} required />
+                             {/* Campo de Fecha de Nacimiento con Hora */}
+                             <div className="space-y-2">
+                                <Label>Fecha y Hora de Nacimiento</Label>
+                                <div className="flex items-center gap-2">
+                                    <Input id="birthdate" type="date" value={birthdate} onChange={(e) => setBirthdate(e.target.value)} required className="flex-grow"/>
+                                    <Input id="birthtime" type="time" value={birthtime} onChange={(e) => setBirthtime(e.target.value)} required className="w-auto"/>
+                                </div>
                             </div>
                         </div>
 
