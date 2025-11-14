@@ -552,6 +552,9 @@ export default function GalleryFinalPage() {
         onOpenChange={() => setCurrentPhotoIndex(null)}
       >
         <DialogContent className="max-w-5xl w-full p-0 bg-transparent border-0 flex items-center justify-center">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Vista ampliada de la foto</DialogTitle>
+          </DialogHeader>
           {photoToView && (
             <div className="relative flex items-center justify-center w-full">
               {/* Prev Button */}

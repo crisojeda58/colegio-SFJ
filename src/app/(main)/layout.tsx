@@ -19,6 +19,7 @@ import {
   Contact,
   GraduationCap,
   Utensils,
+  Plus,
   CalendarPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -56,7 +57,8 @@ const menuItems = [
     { href: "/cumpleanos", label: "Cumpleaños", icon: Cake },
     { href: "/cocina", label: "Menu Casino", icon: Utensils },
     { href: "/galeria", label: "Galería", icon: GalleryVerticalEnd },
-    { href: "/gestion", label: "Gestión", icon: ChartNetwork, roles: ["Admin Intranet"] },
+    { href: "/gestion", label: "Estadisticas", icon: ChartNetwork, roles: ["Admin Intranet"] },
+    { href: "/admin/usuarios", label: "Añadir Usuario", icon: Plus, roles: ["Admin Intranet"] },
 ];
 
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
