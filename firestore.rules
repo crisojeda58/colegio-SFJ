@@ -14,8 +14,9 @@ service cloud.firestore {
       allow read: if request.auth != null;
       // Un usuario solo puede actualizar su propio perfil.
       allow update: if request.auth != null && request.auth.uid == userId;
-      // Nadie puede crear o borrar usuarios desde la app.
-      allow create, delete: if false;
+      // Solo un admin puede crear un usuario (a través del backend). El borrado sigue bloqueado.
+      allow create: if isAdmin();
+      allow delete: if false;
     }
 
     // --- Reglas para la colección 'kitchen_menus' ---

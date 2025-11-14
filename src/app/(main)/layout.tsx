@@ -56,7 +56,7 @@ const menuItems = [
     { href: "/cumpleanos", label: "Cumpleaños", icon: Cake },
     { href: "/cocina", label: "Menu Casino", icon: Utensils },
     { href: "/galeria", label: "Galería", icon: GalleryVerticalEnd },
-    { href: "/gestion", label: "Gestión", icon: ChartNetwork, roles: ["Admin Intranet"] },
+    { href: "/admin/usuarios", label: "Crear Usuario", icon: UserPlus, roles: ["Admin Intranet"] },
 ];
 
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
