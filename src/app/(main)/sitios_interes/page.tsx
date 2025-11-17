@@ -101,7 +101,7 @@ export default function SitiosDeInteresPage() {
       </div>
       <p className="mb-8 font-bold">
         <span className="bg-sidebar text-primary-foreground px-3 py-1 rounded-md">
-          Una colección de enlaces a recursos externos, portales educativos y sitios de relevancia.
+          Enlaces a recursos externos.
         </span>
       </p>
 
