@@ -33,7 +33,7 @@ export async function POST(request: Request) {
                 return NextResponse.json({ message: `El campo '${key}' es obligatorio.` }, { status: 400 });
             }
         }
-        if (role === 'Profesor Jefe' && !course) {
+        if (role === 'Profesor jefe' && !course) {
             return NextResponse.json({ message: 'El campo curso es obligatorio para el rol de Profesor Jefe.' }, { status: 400 });
         }
 
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
             birthdate: Timestamp.fromDate(birthdateObject),
         };
 
-        if (role === 'Profesor Jefe') {
+        if (role === 'Profesor jefe') {
             userData.course = course;
         }
 
