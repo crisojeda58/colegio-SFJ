@@ -85,7 +85,7 @@ export default function CreateUserPage() {
                 avatarUrl: ''
             };
 
-            if (role === 'Profesor Jefe') {
+            if (role === 'Profesor jefe') {
                 body.course = course;
             }
 
@@ -164,16 +164,16 @@ export default function CreateUserPage() {
                                     <SelectTrigger><SelectValue placeholder="Selecciona un rol" /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="Usuario">Usuario</SelectItem>
-                                        <SelectItem value="Profesor Jefe">Profesor Jefe</SelectItem>
+                                        <SelectItem value="Profesor jefe">Profesor jefe</SelectItem>
                                         <SelectItem value="Admin Intranet">Admin Intranet</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
 
-                            {role === 'Profesor Jefe' && (
+                            {role === 'Profesor jefe' && (
                                 <div className="space-y-2 animate-in fade-in">
                                     <Label htmlFor="course">Curso Asignado</Label>
-                                    <Input id="course" value={course} onChange={(e) => setCourse(e.target.value)} placeholder="Ej: IV°A" required={role === 'Profesor Jefe'} />
+                                    <Input id="course" value={course} onChange={(e) => setCourse(e.target.value)} placeholder="Ej: IV°A" required={role === 'Profesor jefe'} />
                                 </div>
                             )}
 
