@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react'; // 1. Importar useEffect
-import { useRouter } from 'next/navigation'; // 2. Importar useRouter
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,8 +23,8 @@ const AccessDenied = () => (
 );
 
 export default function CreateUserPage() {
-    const { userProfile, loading: authLoading } = useAuth();
-    const router = useRouter(); // 3. Inicializar el router
+    const { userProfile, loading: authLoading, getAuthToken } = useAuth();
+    const router = useRouter();
     
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -42,9 +42,7 @@ export default function CreateUserPage() {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
 
-    // 4. Lógica de redirección
     useEffect(() => {
-        // Esperar a que la autenticación termine y luego verificar
         if (!authLoading) {
             if (!userProfile || userProfile.role !== 'Admin Intranet') {
                 router.push('/inicio');
@@ -53,22 +51,166 @@ export default function CreateUserPage() {
     }, [userProfile, authLoading, router]);
 
     const resetForm = () => {
-        // ... (código del formulario sin cambios)
+        setName('');
+        setEmail('');
+        setPassword('');
+        setPhone('');
+        setRole('Usuario');
+        setCourse('');
+        setDepartment('');
+        setStatus('nuevo');
+        setBirthdate('');
+        setBirthtime('12:00');
+        setJobTitle('');
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
-        // ... (código del handler sin cambios)
+        e.preventDefault();
+        setIsLoading(true);
+        setError(null);
+        setSuccess(null);
+
+        try {
+            const token = await getAuthToken();
+            if (!token) {
+                throw new Error('No se pudo obtener el token de autenticación.');
+            }
+
+            const birthdateISO = `${birthdate}T${birthtime}:00`;
+
+            const body: any = {
+                name, email, password, phone, role, department, status, 
+                birthdate: birthdateISO,
+                jobTitle,
+                avatarUrl: ''
+            };
+
+            if (role === 'Profesor Jefe') {
+                body.course = course;
+            }
+
+            const response = await fetch('/api/admin/create-user', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify(body),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Ocurrió un error al crear el usuario.');
+            }
+
+            setSuccess(`¡Usuario '${name}' creado exitosamente!`);
+            resetForm();
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    // 5. Verificar y mostrar AccessDenied mientras se redirige
     if (authLoading || !userProfile || userProfile.role !== 'Admin Intranet') {
         return <AccessDenied />;
     }
 
-    // Si el usuario es admin, se muestra el formulario
     return (
         <div className="container mx-auto py-10">
-            {/* ... resto del JSX del formulario ... */}
+            <Card className="max-w-3xl mx-auto">
+                <CardHeader>
+                    <CardTitle>Crear Nuevo Usuario</CardTitle>
+                    <CardDescription>
+                        Completa el formulario para registrar un nuevo usuario en el sistema.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Columna 1 */}
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="name">Nombre Completo</Label>
+                                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="email">Correo Electrónico</Label>
+                                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="password">Contraseña</Label>
+                                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="phone">Teléfono Interno (Anexo)</Label>
+                                <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} maxLength={4} placeholder="Ej: 1234"/>
+                            </div>
+                             {/* Campo de Fecha de Nacimiento con Hora */}
+                             <div className="space-y-2">
+                                <Label>Fecha y Hora de Nacimiento</Label>
+                                <div className="flex items-center gap-2">
+                                    <Input id="birthdate" type="date" value={birthdate} onChange={(e) => setBirthdate(e.target.value)} required className="flex-grow"/>
+                                    <Input id="birthtime" type="time" value={birthtime} onChange={(e) => setBirthtime(e.target.value)} required className="w-auto"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Columna 2 */}
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="role">Rol</Label>
+                                <Select onValueChange={setRole} value={role}>
+                                    <SelectTrigger><SelectValue placeholder="Selecciona un rol" /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Usuario">Usuario</SelectItem>
+                                        <SelectItem value="Profesor Jefe">Profesor Jefe</SelectItem>
+                                        <SelectItem value="Admin Intranet">Admin Intranet</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {role === 'Profesor Jefe' && (
+                                <div className="space-y-2 animate-in fade-in">
+                                    <Label htmlFor="course">Curso Asignado</Label>
+                                    <Input id="course" value={course} onChange={(e) => setCourse(e.target.value)} placeholder="Ej: IV°A" required={role === 'Profesor Jefe'} />
+                                </div>
+                            )}
+
+                            <div className="space-y-2">
+                                <Label htmlFor="jobTitle">Cargo</Label>
+                                <Input id="jobTitle" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} required placeholder="Ej: Docente"/>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="department">Departamento</Label>
+                                <Input id="department" value={department} onChange={(e) => setDepartment(e.target.value)} required placeholder="Ej: Lenguaje"/>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="status">Estado</Label>
+                                <Select onValueChange={setStatus} value={status}>
+                                    <SelectTrigger><SelectValue placeholder="Selecciona un estado" /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="nuevo">Nuevo</SelectItem>
+                                        <SelectItem value="antiguo">Antiguo</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        {/* Footer del Formulario */}
+                        <div className="md:col-span-2 space-y-4">
+                             {error && <p className="text-red-500 text-sm font-medium text-center">{error}</p>}
+                             {success && <p className="text-green-500 text-sm font-medium text-center">{success}</p>}
+
+                            <Button type="submit" disabled={isLoading} className="w-full">
+                                {isLoading ? 'Creando...' : 'Crear Usuario'}
+                            </Button>
+                        </div>
+                    </form>
+                </CardContent>
+            </Card>
         </div>
     );
 }
